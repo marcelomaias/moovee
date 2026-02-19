@@ -1,4 +1,4 @@
-# 🎬 MovieDB — Next.js + TMDB
+# 🎬 Moovee — Next.js + TMDB
 
 A movies web app built with Next.js 15 (App Router), TypeScript, and Tailwind CSS.
 
@@ -27,7 +27,7 @@ cp .env.local.example .env.local
 Paste your Bearer token into `.env.local`:
 
 ```
-TMDB_API_KEY=eyJhbGciOiJIUzI1NiJ9...
+TMDB_ACCESS_TOKEN=eyJhbGciOiJIUzI1NiJ9...
 ```
 
 ### 3. Install and run
@@ -66,12 +66,12 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Architecture Decisions
 
-| Concern | Approach | Why |
-|---|---|---|
-| Home data fetch | Async Server Component | Pre-rendered HTML, no spinner, ISR cache |
-| API key security | Server-only env var | Never sent to the browser |
-| ISR caching | `next: { revalidate: 3600 }` | Fresh data hourly, no cold fetches |
-| Search | Route Handler + debounce | GET semantics, keeps key server-side |
-| Movie details | Server Action | Triggered on demand, key stays server-side |
-| Favorites | localStorage + React state | No backend needed, instant updates |
-| Hydration safety | `useEffect` initialization | Prevents SSR/client mismatch |
+| Concern          | Approach                     | Why                                        |
+| ---------------- | ---------------------------- | ------------------------------------------ |
+| Home data fetch  | Async Server Component       | Pre-rendered HTML, no spinner, ISR cache   |
+| API key security | Server-only env var          | Never sent to the browser                  |
+| ISR caching      | `next: { revalidate: 3600 }` | Fresh data hourly, no cold fetches         |
+| Search           | Route Handler + debounce     | GET semantics, keeps key server-side       |
+| Movie details    | Server Action                | Triggered on demand, key stays server-side |
+| Favorites        | localStorage + React state   | No backend needed, instant updates         |
+| Hydration safety | `useEffect` initialization   | Prevents SSR/client mismatch               |
