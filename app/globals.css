@@ -1,0 +1,95 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-primary: #0e1117;
+  --bg-secondary: #151a23;
+  --bg-card: #161b24;
+  --accent: #e5173f;
+  --accent-hover: #ff1f48;
+  --text-primary: #f0f2f7;
+  --text-muted: #7a8499;
+  --border: #1e2535;
+}
+
+html,
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-barlow), sans-serif;
+}
+
+@layer components {
+  /* Typography */
+  .text-muted {
+    @apply text-[var(--text-muted)];
+  }
+
+  .text-accent {
+    @apply text-[var(--accent)];
+  }
+
+  /* Condensed uppercase label — used for section titles, hero label, modal section headers */
+  .label {
+    @apply font-condensed text-xs font-bold uppercase tracking-[0.25em];
+    color: var(--accent);
+  }
+
+  /* Accent badge — rating, meta pills */
+  .badge-accent {
+    @apply font-condensed text-xs font-bold px-2 py-0.5 text-white;
+    background: var(--accent);
+  }
+
+  /* Surface backgrounds */
+  .surface {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+  }
+
+  .surface-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+  }
+
+  /* Genre tag */
+  .genre-tag {
+    @apply font-condensed text-xs font-medium uppercase px-2 py-0.5;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    letter-spacing: 0.08em;
+  }
+}
+
+/* Condensed font utility */
+.font-condensed {
+  font-family: var(--font-barlow-condensed), sans-serif;
+}
+
+/* Smooth scrollbar for modal */
+.modal-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.modal-scroll::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+.modal-scroll::-webkit-scrollbar-thumb {
+  background: #2a3347;
+  border-radius: 2px;
+}
+
+/* Accent underline for active nav */
+.nav-active {
+  position: relative;
+}
+.nav-active::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent);
+}
