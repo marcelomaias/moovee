@@ -40,6 +40,8 @@ Click any movie card to open a rich detail modal with backdrop, poster, genres, 
 
 ---
 
+<br>
+
 ### 🔍 Debounced Search
 
 Search across the TMDB catalog in real time — results update as you type with a 400ms debounce, and a spinner shows while the request is in flight.
