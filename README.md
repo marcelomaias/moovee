@@ -2,7 +2,11 @@
 
 A movies web app built with Next.js 15 (App Router), TypeScript, and Tailwind CSS.
 
+<br>
+
 ## Features
+
+<br>
 
 ### ⭐ Hero Banner
 
@@ -10,11 +14,15 @@ A cinematic full-width hero banner highlights a featured film on the home page, 
 
 ![Home Hero](https://raw.githubusercontent.com/marcelomaias/moovee/main/public/screenshots/Home_Hero.png)
 
+<br>
+
 ### 🏠 Home — Popular Movies
 
 Browse a curated grid of popular movies, each showing the poster, title, year, and rating. Hover a card to reveal the favorite button.
 
 ![Popular Movies](https://raw.githubusercontent.com/marcelomaias/moovee/main/public/screenshots/Home_Popular_Movies.jpg)
+
+<br>
 
 ### ❤️ Favorites
 
@@ -22,19 +30,29 @@ Save any movie by clicking the heart icon. Your favorites are persisted to local
 
 ![Favorites Page](https://raw.githubusercontent.com/marcelomaias/moovee/main/public/screenshots/Favorites_Page.jpg)
 
+<br>
+
 ### 🎥 Movie Detail Modal
 
 Click any movie card to open a rich detail modal with backdrop, poster, genres, overview, director, and the top cast members with their profile photos.
 
 ![Movie Info Modal](https://raw.githubusercontent.com/marcelomaias/moovee/main/public/screenshots/Movie_Info_Modal.png)
 
+<br>
+
 ### 🔍 Debounced Search
 
 Search across the TMDB catalog in real time — results update as you type with a 400ms debounce, and a spinner shows while the request is in flight.
 
+<br>
+
 ---
 
+<br>
+
 ## Getting Started
+
+<br>
 
 ### 1. Get a TMDB API key
 
@@ -62,7 +80,11 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+<br>
+
 ---
+
+<br>
 
 ## Project Structure
 
@@ -92,7 +114,11 @@ Open [http://localhost:3000](http://localhost:3000).
   useMovieSearch.ts         → Debounced search state
 ```
 
+<br>
+
 ---
+
+<br>
 
 ## Architecture Decisions
 
