@@ -4,17 +4,17 @@ A movies web app built with Next.js 15 (App Router), TypeScript, and Tailwind CS
 
 ## Features
 
-### 🏠 Home — Popular Movies
-
-Browse a curated grid of popular movies, each showing the poster, title, year, and rating. Hover a card to reveal the favorite button.
-
-![Popular Movies](https://raw.githubusercontent.com/marcelomaias/moovee/main/public/screenshots/Home_Popular_Movies.jpg)
-
 ### ⭐ Hero Banner
 
 A cinematic full-width hero banner highlights a featured film on the home page, with backdrop image, tagline, runtime, and genres.
 
 ![Home Hero](https://raw.githubusercontent.com/marcelomaias/moovee/main/public/screenshots/Home_Hero.png)
+
+### 🏠 Home — Popular Movies
+
+Browse a curated grid of popular movies, each showing the poster, title, year, and rating. Hover a card to reveal the favorite button.
+
+![Popular Movies](https://raw.githubusercontent.com/marcelomaias/moovee/main/public/screenshots/Home_Popular_Movies.jpg)
 
 ### ❤️ Favorites
 
