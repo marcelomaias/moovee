@@ -14,7 +14,11 @@ A cinematic full-width hero banner highlights a featured film on the home page, 
 
 ![Home Hero](https://raw.githubusercontent.com/marcelomaias/moovee/main/public/screenshots/Home_Hero.png)
 
+<br>
+
 ---
+
+<br>
 
 ### 🏠 Home — Popular Movies
 
@@ -22,7 +26,11 @@ Browse a curated grid of popular movies, each showing the poster, title, year, a
 
 ![Popular Movies](https://raw.githubusercontent.com/marcelomaias/moovee/main/public/screenshots/Home_Popular_Movies.jpg)
 
+<br>
+
 ---
+
+<br>
 
 ### ❤️ Favorites
 
@@ -30,7 +38,11 @@ Save any movie by clicking the heart icon. Your favorites are persisted to local
 
 ![Favorites Page](https://raw.githubusercontent.com/marcelomaias/moovee/main/public/screenshots/Favorites_Page.jpg)
 
+<br>
+
 ---
+
+<br>
 
 ### 🎥 Movie Detail Modal
 
