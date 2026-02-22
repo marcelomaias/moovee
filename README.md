@@ -8,25 +8,25 @@ A movies web app built with Next.js 15 (App Router), TypeScript, and Tailwind CS
 
 Browse a curated grid of popular movies, each showing the poster, title, year, and rating. Hover a card to reveal the favorite button.
 
-![Popular Movies](https://raw.githubusercontent.com/marcelomaias/moovee/main/screenshots/Home_Popular_Movies.jpg)
+![Popular Movies](https://raw.githubusercontent.com/marcelomaias/moovee/main/public/screenshots/Home_Popular_Movies.jpg)
 
 ### ⭐ Hero Banner
 
 A cinematic full-width hero banner highlights a featured film on the home page, with backdrop image, tagline, runtime, and genres.
 
-![Home Hero](https://raw.githubusercontent.com/marcelomaias/moovee/main/screenshots/Home_Hero.png)
+![Home Hero](https://raw.githubusercontent.com/marcelomaias/moovee/main/public/screenshots/Home_Hero.png)
 
 ### ❤️ Favorites
 
 Save any movie by clicking the heart icon. Your favorites are persisted to localStorage and shown on their own dedicated page, complete with a hero banner for your top-rated pick.
 
-![Favorites Page](https://raw.githubusercontent.com/marcelomaias/moovee/main/screenshots/Favorites_Page.jpg)
+![Favorites Page](https://raw.githubusercontent.com/marcelomaias/moovee/main/public/screenshots/Favorites_Page.jpg)
 
 ### 🎥 Movie Detail Modal
 
 Click any movie card to open a rich detail modal with backdrop, poster, genres, overview, director, and the top cast members with their profile photos.
 
-![Movie Info Modal](https://raw.githubusercontent.com/marcelomaias/moovee/main/screenshots/Movie_Info_Modal.png)
+![Movie Info Modal](https://raw.githubusercontent.com/marcelomaias/moovee/main/public/screenshots/Movie_Info_Modal.png)
 
 ### 🔍 Debounced Search
 
