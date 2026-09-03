@@ -8,6 +8,13 @@
       "when": 1788402569743,
       "tag": "0000_fast_omega_sentinel",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1788421519751,
+      "tag": "0001_even_scalphunter",
+      "breakpoints": true
     }
   ]
 }

@@ -12,7 +12,7 @@
     "auth:generate": "npx @better-auth/cli@latest generate --config src/lib/auth/server.ts --output src/lib/auth/schema.ts"
   },
   "dependencies": {
-    "@radix-ui/react-label": "^2.1.15",
+    "@uploadthing/react": "^7.3.3",
     "@vercel/functions": "^3.3.3",
     "better-auth": "^1.4.18",
     "class-variance-authority": "^0.7.1",
@@ -26,7 +26,8 @@
     "radix-ui": "^1.4.3",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
-    "tailwind-merge": "^3.4.0"
+    "tailwind-merge": "^3.4.0",
+    "uploadthing": "^7.7.4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

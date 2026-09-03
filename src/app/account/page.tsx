@@ -1,4 +1,6 @@
 import { requireUser } from "@/lib/auth/permissions";
+import { AvatarUpload } from "@/components/account/avatar-upload";
+import { NavBar } from "@/components/navbar";
 
 export default async function AccountPage() {
   const session = await requireUser();
@@ -22,19 +24,23 @@ export default async function AccountPage() {
             </p>
           </div>
 
-          <div className="mt-6 flex items-center gap-4">
-            <div className="flex size-20 items-center justify-center overflow-hidden rounded-full border bg-muted">
-              {user.image ? (
-                <img
-                  src={user.image}
-                  alt={user.name}
-                  className="size-full object-cover"
-                />
-              ) : (
-                <span className="text-2xl font-semibold">
-                  {user.name.charAt(0).toUpperCase()}
-                </span>
-              )}
+          <div className="mt-6 flex items-center gap-6">
+            <div className="flex flex-col items-center gap-3">
+              <div className="flex size-20 items-center justify-center overflow-hidden rounded-full border bg-muted">
+                {user.image ? (
+                  <img
+                    src={user.image}
+                    alt={user.name}
+                    className="size-full object-cover"
+                  />
+                ) : (
+                  <span className="text-2xl font-semibold text-muted-foreground">
+                    {user.name?.charAt(0).toUpperCase()}
+                  </span>
+                )}
+              </div>
+
+              <AvatarUpload />
             </div>
 
             <div>
