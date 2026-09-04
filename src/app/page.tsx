@@ -5,7 +5,7 @@ import { checkDbConnection } from "@/lib/db/client";
 export default async function Home() {
   const result = await checkDbConnection();
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-[calc(100vh-5rem)] flex-col">
       <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4">
         <main className="flex flex-1 flex-col justify-center">
           <h1 className="text-3xl font-semibold leading-none tracking-tighter md:text-4xl md:leading-none lg:text-5xl lg:leading-none">

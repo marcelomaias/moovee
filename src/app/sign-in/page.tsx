@@ -96,7 +96,17 @@ export default function SignInPage() {
             </form>
 
             <p className="mt-6 text-center text-sm text-[#61646B] dark:text-[#94979E]">
-              Don't have an account?{" "}
+              Forgot your password?{" "}
+              <Link
+                href="/forgot-password"
+                className="font-medium text-primary hover:underline"
+              >
+                Reset it
+              </Link>
+            </p>
+
+            <p className="mt-3 text-center text-sm text-[#61646B] dark:text-[#94979E]">
+              Don&apos;t have an account?{" "}
               <Link
                 href="/sign-up"
                 className="font-medium text-primary hover:underline"

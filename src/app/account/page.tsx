@@ -51,35 +51,6 @@ export default async function AccountPage() {
               <p className="text-xl text-muted-foreground">{user.email}</p>
             </div>
           </div>
-
-          {/* <div className="mt-6 grid gap-4">
-            <div className="grid gap-2">
-              <label htmlFor="name" className="text-sm font-medium">
-                Name
-              </label>
-              <input
-                id="name"
-                name="name"
-                defaultValue={user.name}
-                className="rounded-md border bg-background px-3 py-2"
-                disabled
-              />
-            </div>
-
-            <div className="grid gap-2">
-              <label htmlFor="email" className="text-sm font-medium">
-                Email
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                defaultValue={user.email}
-                className="rounded-md border bg-background px-3 py-2"
-                disabled
-              />
-            </div>
-          </div> */}
         </section>
 
         <section className="rounded-lg border p-6">
@@ -114,21 +85,6 @@ export default async function AccountPage() {
             <ChangePasswordForm />
           </div>
         </section>
-
-        {/* <section className="rounded-lg border p-6">
-          <h2 className="text-xl font-semibold">Account</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Manage your account session.
-          </p>
-
-          <button
-            type="button"
-            disabled
-            className="mt-6 rounded-md border px-4 py-2 text-sm font-medium opacity-50"
-          >
-            Sign out
-          </button>
-        </section> */}
       </div>
     </main>
   );

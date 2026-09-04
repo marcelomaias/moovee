@@ -1,3 +1,9 @@
+## Using OpenCode
+
+When starting work on this boilerplate, tell OpenCode:
+
+> Read `AGENTS.md` and `ARCHITECTURE.md` before making any changes. Understand the existing boilerplate architecture and preserve its conventions. Then implement the requested feature on top of the existing system.
+
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://neon.com/brand/neon-logo-dark-color.svg?new">
   <source media="(prefers-color-scheme: light)" srcset="https://neon.com/brand/neon-logo-light-color.svg?new">
