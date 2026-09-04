@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ThemeSelector } from "@/components/themes/selector";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,9 +17,11 @@ import { useSession, signOut } from "@/lib/auth/client";
 
 export function NavBar() {
   const { data: session, isPending } = useSession();
+  const router = useRouter();
 
   const handleSignOut = async () => {
     await signOut();
+    router.push("/");
   };
 
   const user = session?.user;

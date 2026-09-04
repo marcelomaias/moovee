@@ -11,5 +11,11 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
+  user: {
+    changeEmail: {
+      enabled: true,
+      updateEmailWithoutVerification: true,
+    },
+  },
   plugins: [admin(), nextCookies()], // make sure this is the last plugin in the array
 });

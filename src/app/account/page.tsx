@@ -1,5 +1,8 @@
 import { requireUser } from "@/lib/auth/permissions";
 import { AvatarUpload } from "@/components/account/avatar-upload";
+import { ChangeEmailForm } from "@/components/account/change-email-form";
+import { ChangeNameForm } from "@/components/account/change-name-form";
+import { ChangePasswordForm } from "@/components/account/change-password-form";
 import { NavBar } from "@/components/navbar";
 
 export default async function AccountPage() {
@@ -44,12 +47,12 @@ export default async function AccountPage() {
             </div>
 
             <div>
-              <p className="font-medium">{user.name}</p>
-              <p className="text-sm text-muted-foreground">{user.email}</p>
+              <p className="font-medium text-4xl">{user.name}</p>
+              <p className="text-xl text-muted-foreground">{user.email}</p>
             </div>
           </div>
 
-          <div className="mt-6 grid gap-4">
+          {/* <div className="mt-6 grid gap-4">
             <div className="grid gap-2">
               <label htmlFor="name" className="text-sm font-medium">
                 Name
@@ -76,6 +79,28 @@ export default async function AccountPage() {
                 disabled
               />
             </div>
+          </div> */}
+        </section>
+
+        <section className="rounded-lg border p-6">
+          <h2 className="text-xl font-semibold">Name</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Current name: {user.name}
+          </p>
+
+          <div className="mt-4">
+            <ChangeNameForm />
+          </div>
+        </section>
+
+        <section className="rounded-lg border p-6">
+          <h2 className="text-xl font-semibold">Email</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Current email: {user.email}
+          </p>
+
+          <div className="mt-4">
+            <ChangeEmailForm />
           </div>
         </section>
 
@@ -85,16 +110,12 @@ export default async function AccountPage() {
             Manage your password and account security.
           </p>
 
-          <button
-            type="button"
-            disabled
-            className="mt-6 rounded-md border px-4 py-2 text-sm font-medium opacity-50"
-          >
-            Change password
-          </button>
+          <div className="mt-6">
+            <ChangePasswordForm />
+          </div>
         </section>
 
-        <section className="rounded-lg border p-6">
+        {/* <section className="rounded-lg border p-6">
           <h2 className="text-xl font-semibold">Account</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             Manage your account session.
@@ -107,7 +128,7 @@ export default async function AccountPage() {
           >
             Sign out
           </button>
-        </section>
+        </section> */}
       </div>
     </main>
   );
