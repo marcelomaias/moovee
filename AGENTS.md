@@ -94,6 +94,18 @@ Read these files to understand the existing implementation:
 - Client instance at `src/lib/email/resend.ts`.
 - Only used for password reset currently. New transactional emails: create `src/lib/email/<template>.ts`, import `resend`, call `resend.emails.send()`.
 
+## Testing
+
+- **Vitest** (`pnpm test:unit`) covers auth integration, RBAC guards, server actions, and the DB client. Unit tests live **colocated** next to the code as `*.test.ts`; shared fixtures import from `@/` and `@test/` (alias → `./tests/*`).
+- **Playwright** (`pnpm test:e2e`) runs in `tests/e2e/` against a real app server on **port 3100**.
+- Tests never touch the dev/prod database. `.env.test` (gitignored) defines a dedicated test `DATABASE_URL` on a separate Neon branch, plus `BETTER_AUTH_URL=http://localhost:3100` and a dummy `RESEND_API_KEY`. Both configs load `.env.test` before any app module is imported.
+- Seeding and fixtures live in `tests/helpers/seed.ts` and use the real Better Auth flow (sign-up via `auth.api.signUpEmail`, session cookies via `auth.handler` on `/api/auth/sign-in/email`).
+- Playwright's `globalSetup` seeds via a child `node --import tsx` process because Playwright's loader does **not** resolve tsconfig `paths` — keep global-setup free of `@/` imports.
+- Assert **user-visible outcomes**, never Better Auth internals or raw network timing:
+  - `signUpEmail` auto-signs-in; after a UI sign-up the user is already authenticated.
+  - Sign-out only deletes the session matching the cookie; don't assert "zero sessions for the user".
+  - Don't navigate immediately after clicking an async action (e.g., "Sign Out") — wait for the observable state (navbar "Sign In" link).
+
 ## Do Not
 
 - Do not replace Better Auth with NextAuth, Lucia, or custom session handling.

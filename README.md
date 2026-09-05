@@ -186,6 +186,27 @@ await db.update(user)
 - [Drizzle with PostgreSQL](https://orm.drizzle.team/docs/get-started-postgresql)
 - [Drizzle Kit](https://orm.drizzle.team/kit-docs/overview)
 
+## Testing
+
+This project ships with a Vitest unit/integration suite and a Playwright end-to-end suite.
+
+```bash
+pnpm test:unit       # Vitest suites (colocated as *.test.ts next to the code)
+pnpm test:e2e        # Playwright E2E against the app on port 3100
+pnpm test:db:migrate # Apply migrations to the test database (fresh test branches)
+```
+
+Tests run against a **dedicated Neon test database**, never the dev/prod one:
+
+1. Create a `.env.test` from the Testing section of `.env.example` with a Neon branch connection string (`DATABASE_URL`), a `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL=http://localhost:3100`, and a dummy `RESEND_API_KEY`.
+2. For a freshly created test branch, run `pnpm test:db:migrate` once.
+
+Playwright also needs the Chromium system libraries installed:
+
+```bash
+sudo apt-get install libasound2t64   # or: pnpm exec playwright install-deps chromium
+```
+
 ## Learn More
 
 To learn more about Neon, check out the Neon documentation:
