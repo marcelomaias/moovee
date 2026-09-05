@@ -23,9 +23,10 @@ Defined in `tsconfig.json`:
 
 ```
 @/* → ./src/*
+@test/* → ./tests/*
 ```
 
-All imports use `@/` (e.g., `@/lib/auth/server`, `@/components/ui/button`).
+All app imports use `@/` (e.g., `@/lib/auth/server`, `@/components/ui/button`). Test files import shared fixtures via `@test/` (e.g., `@/test` resolves to `./tests/helpers/seed`).
 
 ## Directory Structure
 
@@ -77,7 +78,12 @@ drizzle/                    # Generated SQL migrations
 ├── 0001_even_scalphunter.sql
 └── meta/_journal.json
 public/                     # Static assets (logos, icons)
+tests/                      # Test infrastructure
+├── e2e/                    # Playwright specs + global-setup
+└── helpers/                # seed.ts (shared fixtures) + seed-cli.ts (tsx entry point)
 ```
+
+Test runner configs live at `vitest.config.ts` and `playwright.config.ts` in the repo root.
 
 ## Authentication Architecture
 
@@ -389,6 +395,54 @@ const nextConfig: NextConfig = {
 **File:** `postcss.config.mjs` — uses `@tailwindcss/postcss` plugin (Tailwind v4 approach).
 
 **File:** `tsconfig.json` — targets ES2017, strict mode, bundler module resolution, incremental builds.
+
+## Testing
+
+### Test Stack
+
+| Layer | Tool | Location |
+|-------|------|----------|
+| Unit/integration | Vitest | colocated `src/**/*.test.ts` |
+| End-to-end | Playwright | `tests/e2e/` |
+| Seeding helpers | `tests/helpers/seed.ts` | shared by both runners |
+| Test database | Neon branch (Playwright seeds on a separate Neon project/branch) | `.env.test` |
+
+### Scripts
+
+| Script | Command |
+|--------|---------|
+| `test` | `vitest run` (alias of `test:unit`) |
+| `test:unit` | `vitest run` |
+| `test:e2e` | `playwright test` |
+| `test:db:migrate` | `dotenv -e .env.test -- drizzle-kit migrate` |
+
+### Test Environment
+
+- **`.env.test`** (gitignored, copied from the Testing section of `.env.example`) holds: a dedicated test `DATABASE_URL` (a separate Neon branch — never the dev/prod DB), `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL=http://localhost:3100`, and a dummy `RESEND_API_KEY` (no emails are sent; the key only needs to exist so the Resend client can construct).
+- Both configs load `.env.test` before any app module is imported, so the Drizzle pool and auth instance always point at the test database.
+- Playwright's `webServer` runs the app on **port 3100** with `reuseExistingServer: false`.
+- `test:db:migrate` applies pending Drizzle migrations to the test database (needed when a fresh test branch is created; existing branches inherit schema from their parent).
+
+### Seed Helpers — `tests/helpers/seed.ts`
+
+Shared fixtures used by both runners:
+- `TestUser` interface plus fixed `REGULAR_TEST_USER` (`user@test.local`) and `ADMIN_TEST_USER` (`admin@test.local`).
+- `makeTestUser(prefix, role)` — unique email per call so parallel Vitest files never collide.
+- `createUser(u)` — signs the user up through the real Better Auth flow (`auth.api.signUpEmail`), pins the `role`, idempotent.
+- `seedTestUsers()` — seeds both fixed users (called by Playwright global-setup).
+- `getSessionHeaders(email, password)` — signs in through the real Better Auth HTTP handler (`auth.handler` on `/api/auth/sign-in/email`) and returns `Headers` with the real session cookie, ready for `auth.api.getSession` / `requireUser()` / `requireAdmin()`.
+
+> Note: `auth.api.signInEmail` returns `{ redirect, token, url, user }` but **no cookies**. Real session cookies only come from the HTTP endpoint, which is why `getSessionHeaders` goes through `auth.handler`.
+
+### Playwright global-setup
+
+`tests/e2e/global-setup.ts` seeds the fixed users. Playwright's module loader does **not** resolve tsconfig `paths`, so seeding runs in a child Node process via `node --import tsx tests/helpers/seed-cli.ts` (tsx resolves `@/`). Keep global-setup free of `@/` imports.
+
+### Better Auth Behavior to Remember in Tests
+
+- `signUpEmail` **auto-signs-in** (mints a session). After sign-up via the UI, the user is already authenticated.
+- `signOut` deletes only the session matching the cookie token. A user can have multiple sessions (e.g., the sign-up auto-session), so asserting "zero sessions for this user" after sign-out is wrong — assert the observable state instead (`getSession()` returns null, or the cookie-bearing session count decreases by one).
+- Assert user-visible outcomes in Playwright, not raw network timing: clicking "Sign Out" fires an async client call; navigating immediately aborts the in-flight request. Wait for the logged-out state (e.g., navbar "Sign In" link) before navigating.
 
 ## Adding New Features
 
