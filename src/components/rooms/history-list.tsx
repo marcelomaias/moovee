@@ -1,9 +1,9 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { X } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 import { tmdbImage } from "@/lib/tmdb/client";
 import { Button } from "@/components/ui/button";
 import { removeHistoryEntry } from "@/app/rooms/actions";
@@ -25,12 +25,23 @@ interface Props {
 
 export function HistoryList({ roomId, entries, isOwner }: Props) {
   const router = useRouter();
-  const [pending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+  const [pendingTmdbId, setPendingTmdbId] = useState<number | null>(null);
+  const [, startTransition] = useTransition();
 
   const remove = (tmdbId: number) => {
+    if (pendingTmdbId !== null) return;
+    setError(null);
+    setPendingTmdbId(tmdbId);
     startTransition(async () => {
-      await removeHistoryEntry(roomId, tmdbId);
-      router.refresh();
+      try {
+        await removeHistoryEntry(roomId, tmdbId);
+        router.refresh();
+      } catch {
+        setError("Couldn't remove the entry from history.");
+      } finally {
+        setPendingTmdbId(null);
+      }
     });
   };
 
@@ -43,41 +54,58 @@ export function HistoryList({ roomId, entries, isOwner }: Props) {
   }
 
   return (
-    <ul className="space-y-2">
-      {entries.map((entry) => (
-        <li
-          key={entry.id}
-          className="flex items-center gap-4 rounded-lg border bg-card p-3"
+    <div className="space-y-3">
+      {error ? (
+        <p
+          role="alert"
+          className="rounded-lg border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive"
         >
-          <div className="relative aspect-2/3 w-12 shrink-0 overflow-hidden rounded-md border bg-muted">
-            <Image
-              src={tmdbImage(entry.posterPath, "w185")}
-              alt={entry.title}
-              width={48}
-              height={72}
-              className="object-cover"
-            />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate font-medium">{entry.title}</p>
-            <p className="text-xs text-muted-foreground">
-              {entry.releaseYear ?? "Unknown year"} · watched{" "}
-              {entry.watchedAt.toLocaleDateString()}
-            </p>
-          </div>
-          {isOwner ? (
-            <Button
-              size="icon"
-              variant="ghost"
-              disabled={pending}
-              onClick={() => remove(entry.tmdbId)}
-              aria-label={`Remove ${entry.title} from history`}
+          {error}
+        </p>
+      ) : null}
+      <ul className="space-y-2">
+        {entries.map((entry) => {
+          const isRemoving = pendingTmdbId === entry.tmdbId;
+          return (
+            <li
+              key={entry.id}
+              className="flex items-center gap-4 rounded-lg border bg-card p-3"
             >
-              <X className="size-4" />
-            </Button>
-          ) : null}
-        </li>
-      ))}
-    </ul>
+              <div className="relative aspect-2/3 w-12 shrink-0 overflow-hidden rounded-md border bg-muted">
+                <Image
+                  src={tmdbImage(entry.posterPath, "w185")}
+                  alt={entry.title}
+                  width={48}
+                  height={72}
+                  className="object-cover"
+                />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-medium">{entry.title}</p>
+                <p className="text-xs text-muted-foreground">
+                  {entry.releaseYear ?? "Unknown year"} · watched{" "}
+                  {entry.watchedAt.toLocaleDateString()}
+                </p>
+              </div>
+              {isOwner ? (
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  disabled={isRemoving}
+                  onClick={() => remove(entry.tmdbId)}
+                  aria-label={`Remove ${entry.title} from history`}
+                >
+                  {isRemoving ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <X className="size-4" />
+                  )}
+                </Button>
+              ) : null}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
 }
