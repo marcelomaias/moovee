@@ -2,7 +2,6 @@
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { Check, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { acceptInvite, declineInvite } from "@/app/rooms/actions";
@@ -39,12 +38,7 @@ export function RoomInvites({ invites }: { invites: InviteData[] }) {
           className="flex items-center gap-3 rounded-lg border bg-card p-4"
         >
           <div className="min-w-0 flex-1">
-            <Link
-              href={`/rooms/${invite.roomId}`}
-              className="font-medium hover:underline"
-            >
-              {invite.roomName}
-            </Link>
+            <p className="font-medium">{invite.roomName}</p>
             <p className="text-xs text-muted-foreground">
               You've been invited to this room.
             </p>
