@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Search, UserPlus } from "lucide-react";
+import { Loader2, Search, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -21,7 +21,9 @@ export function InviteMembers({ roomId }: { roomId: string }) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [searching, setSearching] = useState(false);
-  const [inviting, setInviting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [invitingId, setInvitingId] = useState<string | null>(null);
+  const [, startTransition] = useTransition();
 
   useEffect(() => {
     const q = query.trim();
@@ -38,12 +40,24 @@ export function InviteMembers({ roomId }: { roomId: string }) {
   }, [query, roomId]);
 
   const invite = (userId: string) => {
-    setInviting(true);
-    void inviteToRoom(roomId, userId).then(() => {
-      setQuery("");
-      setResults([]);
-      setInviting(false);
-      router.refresh();
+    if (invitingId !== null) return;
+    setError(null);
+    setInvitingId(userId);
+    startTransition(async () => {
+      try {
+        const result = await inviteToRoom(roomId, userId);
+        if (result?.error) {
+          setError(result.error);
+        } else {
+          setQuery("");
+          setResults([]);
+          router.refresh();
+        }
+      } catch {
+        setError("Couldn't send the invitation. Please retry.");
+      } finally {
+        setInvitingId(null);
+      }
     });
   };
 
@@ -59,6 +73,7 @@ export function InviteMembers({ roomId }: { roomId: string }) {
         />
       </div>
       <div className="mt-3 space-y-2">
+        {error ? <p className="text-sm text-destructive">{error}</p> : null}
         {searching && <p className="text-sm text-muted-foreground">Searching…</p>}
         {!searching && query.trim() !== "" && results.length === 0 && (
           <p className="text-sm text-muted-foreground">No users found.</p>
@@ -72,8 +87,18 @@ export function InviteMembers({ roomId }: { roomId: string }) {
               <p className="truncate text-sm font-medium">{u.name}</p>
               <p className="truncate text-xs text-muted-foreground">{u.email}</p>
             </div>
-            <Button size="sm" disabled={inviting} onClick={() => invite(u.id)}>
-              <UserPlus className="size-4" /> Invite
+            <Button
+              size="sm"
+              disabled={invitingId === u.id}
+              onClick={() => invite(u.id)}
+            >
+              {invitingId === u.id ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <>
+                  <UserPlus className="size-4" /> Invite
+                </>
+              )}
             </Button>
           </div>
         ))}
