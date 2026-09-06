@@ -34,6 +34,10 @@ Read these files to understand the existing implementation:
 | Database client | `src/lib/db/client.ts` |
 | Drizzle config | `drizzle.config.ts` |
 | Route protection | `src/proxy.ts` |
+| Rooms (schema) | `src/lib/rooms/schema.ts` |
+| Rooms (auth guards) | `src/lib/rooms/auth.ts` |
+| Rooms (approval engine) | `src/lib/rooms/approval.ts` |
+| Rooms (server actions) | `src/app/rooms/actions.ts` |
 | UploadThing | `src/app/api/uploadthing/core.ts`, `src/lib/uploadthing.ts` |
 | Root layout | `src/app/layout.tsx` |
 | Navbar | `src/components/navbar.tsx` |

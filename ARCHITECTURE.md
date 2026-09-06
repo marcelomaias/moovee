@@ -35,9 +35,16 @@ src/
 ├── app/                    # Next.js App Router pages and API routes
 │   ├── api/
 │   │   ├── auth/[...all]/  # Better Auth catch-all API handler
+│   │   ├── search/         # TMDB movie search API (used by room suggest dialog)
 │   │   └── uploadthing/    # UploadThing route handler + file router definition
-│   ├── account/            # Protected account page (server component)
+│   ├── account/            # Protected account page (server component, includes room invites)
 │   ├── admin/              # Admin dashboard (server component + server actions)
+│   ├── rooms/              # Rooms feature (list, create, detail with tabs)
+│   │   ├── page.tsx        # Room list page (server component)
+│   │   ├── new/page.tsx    # Create room page (server component)
+│   │   ├── [roomId]/page.tsx # Room detail page with suggestion/queue/history tabs
+│   │   ├── actions.ts      # All room server actions (CRUD, suggestions, queue, invites)
+│   │   └── *.test.ts       # Colocated unit tests (actions, queue, suggestions, invites, settings)
 │   ├── sign-in/            # Email/password sign-in (client component)
 │   ├── sign-up/            # Email/password sign-up (client component)
 │   ├── forgot-password/    # Password reset request (client component)
@@ -55,6 +62,20 @@ src/
 │   │   ├── change-email-form.tsx
 │   │   ├── change-name-form.tsx
 │   │   └── change-password-form.tsx
+│   ├── movies/
+│   │   └── use-movie-search.ts  # Debounced TMDB search hook (used by rooms)
+│   ├── rooms/              # Room UI client components
+│   │   ├── create-room-form.tsx
+│   │   ├── room-card.tsx
+│   │   ├── room-tabs.tsx
+│   │   ├── suggestion-list.tsx
+│   │   ├── suggest-movie-dialog.tsx
+│   │   ├── queue-list.tsx
+│   │   ├── history-list.tsx
+│   │   ├── invite-members.tsx
+│   │   ├── member-list.tsx
+│   │   ├── room-settings.tsx
+│   │   └── room-invites.tsx
 │   ├── themes/
 │   │   ├── provider.tsx    # next-themes ThemeProvider wrapper
 │   │   └── selector.tsx    # Light/dark/system dropdown toggle
@@ -70,12 +91,20 @@ src/
 │   │   └── client.ts       # Drizzle + pg Pool setup, Vercel serverless pool attachment
 │   ├── email/
 │   │   └── resend.ts       # Resend client instance
+│   ├── rooms/
+│   │   ├── schema.ts       # Drizzle schema for rooms tables (room, members, suggestions, queue, history)
+│   │   ├── auth.ts         # requireRoomMember() and requireRoomOwner() guards
+│   │   ├── approval.ts     # Approval engine (threshold evaluation, suggestion resolution)
+│   │   └── *.test.ts       # Colocated unit tests (approval, schema)
+│   ├── tmdb/
+│   │   └── client.ts       # TMDB API client (searchMovies, getMovieDetails, tmdbImage)
 │   ├── uploadthing.ts      # Typed UploadButton and UploadDropzone exports
 │   └── utils.ts            # cn() helper (clsx + tailwind-merge)
 ├── proxy.ts                # Next.js 16 middleware (replaces old middleware.ts) — route protection
 drizzle/                    # Generated SQL migrations
 ├── 0000_fast_omega_sentinel.sql
 ├── 0001_even_scalphunter.sql
+├── 0002_tidy_boom_boom.sql
 └── meta/_journal.json
 public/                     # Static assets (logos, icons)
 tests/                      # Test infrastructure
@@ -167,14 +196,16 @@ In Next.js 16, `src/proxy.ts` replaces the old root-level `middleware.ts`. This 
 
 Exports:
 - **`proxy(request)`** — the middleware function. Checks for a Better Auth session cookie via `getSessionCookie(request)` and redirects:
-  - Unauthenticated users away from `/account` and `/admin` → `/sign-in`
+  - Unauthenticated users away from `/account`, `/admin`, and `/rooms` → `/sign-in`
   - Authenticated users away from `/sign-in` and `/sign-up` → `/account`
 - **`config`** — route matcher config:
   ```ts
-  matcher: ["/account/:path*", "/admin/:path*", "/sign-in", "/sign-up"]
+  matcher: ["/account/:path*", "/admin/:path*", "/rooms/:path*", "/sign-in", "/sign-up"]
   ```
 
 This provides request-level redirect protection before the page renders. Server-side guards in `src/lib/auth/permissions.ts` (`requireUser()`, `requireAdmin()`) provide the security boundary for protected server components and server actions. Use both: the proxy prevents unauthenticated users from even loading the page; the server guards protect individual data fetches and actions.
+
+Rooms adds a third layer for membership: `requireRoomMember()` and `requireRoomOwner()` in `src/lib/rooms/auth.ts`. These wrap `requireUser()`, verify the user is an active member (owner) of the room, and redirect to `/rooms` otherwise. Call them in room server components and actions on top of `requireUser()`.
 
 ## Database / Neon / Drizzle
 
@@ -184,14 +215,14 @@ This provides request-level redirect protection before the page renders. Server-
 
 - Creates a `pg.Pool` connected via `DATABASE_URL`.
 - Calls `attachDatabasePool(pool)` from `@vercel/functions` for Vercel serverless connection pool management.
-- Creates a Drizzle instance with all schema modules: `drizzle(pool, { schema: { ...authSchema } })`.
+- Creates a Drizzle instance with all schema modules: `drizzle(pool, { schema: { ...authSchema, ...roomsSchema } })`.
 - Exports a `checkDbConnection()` health check function used on the homepage.
 
 ### Drizzle Schema
 
-**File:** `src/lib/auth/schema.ts`
+**Files:** `src/lib/auth/schema.ts`, `src/lib/rooms/schema.ts`
 
-Four tables defined with `pgTable()`:
+Auth tables (four, defined with `pgTable()`):
 
 | Table | Purpose |
 |-------|---------|
@@ -203,6 +234,20 @@ Four tables defined with `pgTable()`:
 Relations defined: `user` has many `sessions` and `accounts`; `session` and `account` each belong to one `user`.
 
 Indexes: `session_userId_idx`, `account_userId_idx`, `verification_identifier_idx`.
+
+Rooms tables (seven, in `src/lib/rooms/schema.ts`):
+
+| Table | Purpose |
+|-------|---------|
+| `room` | A shared watch room. Fields: `id` (text PK), `name`, `description`, `approvalMode` (`"majority"`/`"unanimous"`/`"percentage"`, default `"majority"`), `approvalThreshold` (nullable), `ownerId` (FK→user, cascade), `createdAt`, `updatedAt` |
+| `roomMember` | Join table `(roomId, userId, role, joinedAt)`. Role is `"owner"` or `"member"`. Unique `(roomId, userId)`, indexes on roomId/userId |
+| `roomInvite` | Invites `(roomId, invitedUserId, invitedById, status, expiresAt, createdAt)`. Unique `(roomId, invitedUserId)`, index on invitedUserId |
+| `suggestion` | Pending movie suggestions `(roomId, suggestedById, tmdbId, title, posterPath, releaseYear, status, expiresAt, suggestedAt)`. Index `(roomId, status)` + partial unique `(roomId, tmdbId) WHERE status='pending'` |
+| `suggestionVote` | Votes per suggestion `(suggestionId, userId, createdAt)`. Unique `(suggestionId, userId)` |
+| `queueEntry` | The room's watch queue `(roomId, tmdbId, title, posterPath, releaseYear, position, addedAt, sourceSuggestionId)`. Unique `(roomId, tmdbId)` and `(roomId, position)`; `sourceSuggestionId` set-null on suggestion delete |
+| `watchHistory` | Watched films `(roomId, tmdbId, title, posterPath, releaseYear, watchedById, watchedAt, sourceQueueEntryId)`. Unique `(roomId, tmdbId)`, index on roomId |
+
+All relations exported per table (e.g., `roomRelations`, `suggestionRelations`). Rooms relations cross-reference the auth `user` table.
 
 ### Drizzle Config
 
@@ -234,6 +279,7 @@ SQL files named with a sequential index and random tag (Drizzle Kit convention).
 
 - `0000` — creates the four auth tables (user, session, account, verification)
 - `0001` — adds `issuer` column to `account`
+- `0002` — creates the seven rooms tables (room, room_member, room_invite, suggestion, suggestion_vote, queue_entry, watch_history) with FKs (cascade on room/user, set-null on suggestion/queue links) and unique/partial indexes
 
 ## Server/Client Component Boundaries
 
@@ -243,8 +289,11 @@ SQL files named with a sequential index and random tag (Drizzle Kit convention).
 - `src/app/page.tsx` — homepage (calls `checkDbConnection()`)
 - `src/app/not-found.tsx` — 404 page
 - `src/app/loading.tsx` — loading spinner
-- `src/app/account/page.tsx` — calls `requireUser()` server-side, renders account management
+- `src/app/account/page.tsx` — calls `requireUser()` server-side, renders account management and pending room invites
 - `src/app/admin/page.tsx` — calls `requireAdmin()`, queries users via Drizzle directly
+- `src/app/rooms/page.tsx` — room list; calls `requireUser()`, joins `roomMember`→`room` for the session user
+- `src/app/rooms/new/page.tsx` — create-room form; calls `requireUser()`
+- `src/app/rooms/[roomId]/page.tsx` — room detail; calls `requireRoomMember()` + `finalizeExpired()`, loads suggestions, queue, history, and member list (owner-only)
 
 ### Client Components (`"use client"`)
 
@@ -258,10 +307,13 @@ SQL files named with a sequential index and random tag (Drizzle Kit convention).
 - `src/components/themes/selector.tsx` — theme toggle dropdown
 - `src/components/account/*.tsx` — all account management forms
 - `src/app/admin/user-list.tsx` — user management list with role changes and deletion
+- `src/components/rooms/*.tsx` — room UI components (create form, card, tabs, suggestion/queue/history lists, invite, member list, settings, room invites on account page)
+- `src/components/movies/use-movie-search.ts` — debounced TMDB search hook used by the suggest-movie dialog
 
 ### Server Actions
 
 - `src/app/admin/actions.ts` — `"use server"` functions `deleteUser()` and `updateUserRole()`. Both call `requireAdmin()` internally for security. Use `revalidatePath("/admin")` to refresh the page after mutations.
+- `src/app/rooms/actions.ts` — 15 `"use server"` functions covering room CRUD, suggestions (suggest + approve with vote resolution), queue management (mark watched, reorder, remove), watch history, invites (search, invite, accept, decline, remove member), and approval settings. All actions call `requireUser()` directly or via `requireRoomMember()`/`requireRoomOwner()`. Use `revalidatePath()` after mutations.
 
 ## Important Components
 
@@ -430,13 +482,14 @@ Shared fixtures used by both runners:
 - `makeTestUser(prefix, role)` — unique email per call so parallel Vitest files never collide.
 - `createUser(u)` — signs the user up through the real Better Auth flow (`auth.api.signUpEmail`), pins the `role`, idempotent.
 - `seedTestUsers()` — seeds both fixed users (called by Playwright global-setup).
+- Rooms fixtures: `ROOM_OWNER_TEST_USER`, `ROOM_MEMBER_TEST_USER`, `ROOM_FIXTURE_ROOMS` ("Room Wars", "Party Room", "Settings Room"), and `seedRoomsFixture()` (idempotent — wipes/reseeds room data). `seed-cli.ts` calls both `seedTestUsers()` and `seedRoomsFixture()`.
 - `getSessionHeaders(email, password)` — signs in through the real Better Auth HTTP handler (`auth.handler` on `/api/auth/sign-in/email`) and returns `Headers` with the real session cookie, ready for `auth.api.getSession` / `requireUser()` / `requireAdmin()`.
 
 > Note: `auth.api.signInEmail` returns `{ redirect, token, url, user }` but **no cookies**. Real session cookies only come from the HTTP endpoint, which is why `getSessionHeaders` goes through `auth.handler`.
 
 ### Playwright global-setup
 
-`tests/e2e/global-setup.ts` seeds the fixed users. Playwright's module loader does **not** resolve tsconfig `paths`, so seeding runs in a child Node process via `node --import tsx tests/helpers/seed-cli.ts` (tsx resolves `@/`). Keep global-setup free of `@/` imports.
+`tests/e2e/global-setup.ts` seeds the fixed users and the rooms fixtures. Playwright's module loader does **not** resolve tsconfig `paths`, so seeding runs in a child Node process via `node --import tsx tests/helpers/seed-cli.ts` (tsx resolves `@/`). Keep global-setup free of `@/` imports.
 
 ### Better Auth Behavior to Remember in Tests
 
@@ -471,8 +524,12 @@ Create `src/app/api/<route>/route.ts` with exported `GET`, `POST`, etc. function
 
 ## Key Conventions
 
-- Route protection uses two layers: `src/proxy.ts` (Next.js 16 middleware) handles redirects before page load, while `requireUser()`/`requireAdmin()` in `src/lib/auth/permissions.ts` guard server components and actions.
+- Route protection uses two layers: `src/proxy.ts` (Next.js 16 middleware) handles redirects before page load, while `requireUser()`/`requireAdmin()` in `src/lib/auth/permissions.ts` guard server components and actions. Rooms adds a third layer with `requireRoomMember()`/`requireRoomOwner()` in `src/lib/rooms/auth.ts`.
 - The `admin` plugin fields (`role`, `banned`, `banReason`, `banExpires`) are on the `user` table. Use `role` for RBAC.
 - The Drizzle schema at `src/lib/auth/schema.ts` is auto-generated by Better Auth CLI — prefer `pnpm auth:generate` over manual edits to keep it in sync with the auth config.
+- The rooms schema at `src/lib/rooms/schema.ts` is hand-written (not auto-generated). Follow the standard Drizzle workflow: edit → `pnpm db:generate` → `pnpm db:migrate`.
 - UploadThing handles avatar cleanup automatically — old profile images are deleted when a new one is uploaded.
-- The root layout renders `<NavBar />` globally on every page.
+- The root layout renders `<NavBar />` globally on every page, which includes a "Rooms" link for authenticated users.
+- Room approval modes are `majority` (default), `unanimous`, or `percentage`. The approval engine in `src/lib/rooms/approval.ts` handles threshold evaluation and suggestion resolution (marking approved → queue entry) within the same DB transaction.
+- Suggestions expire after 7 days (`SUGGESTION_TTL_MS`). Room invites expire after 7 days (`INVITE_TTL_MS`). Expired suggestions are lazily finalized on room page load via `finalizeExpired()`.
+- Drag-and-drop reorder for the watch queue uses `@dnd-kit/react` + `@dnd-kit/helpers`.
