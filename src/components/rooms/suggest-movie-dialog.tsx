@@ -17,7 +17,13 @@ import {
 } from "@/components/ui/dialog";
 import { suggestMovie } from "@/app/rooms/actions";
 
-export function SuggestMovieDialog({ roomId }: { roomId: string }) {
+export function SuggestMovieDialog({
+  roomId,
+  alreadySuggested,
+}: {
+  roomId: string;
+  alreadySuggested: number[];
+}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,8 +39,6 @@ export function SuggestMovieDialog({ roomId }: { roomId: string }) {
       if (result?.error) {
         setError(result.error);
       } else {
-        setOpen(false);
-        setQuery("");
         router.refresh();
       }
       setSuggestingId(null);
@@ -77,39 +81,44 @@ export function SuggestMovieDialog({ roomId }: { roomId: string }) {
               No movies found.
             </p>
           )}
-          {results.map((movie) => (
-            <div
-              key={movie.id}
-              className="flex items-center gap-3 rounded-lg border bg-card p-2"
-            >
-              <div className="relative aspect-2/3 w-10 shrink-0 overflow-hidden rounded border bg-muted">
-                <Image
-                  src={tmdbImage(movie.poster_path, "w185")}
-                  alt={movie.title}
-                  width={40}
-                  height={60}
-                  className="object-cover"
-                />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium">{movie.title}</p>
-                <p className="text-xs text-muted-foreground">
-                  {movie.release_date?.slice(0, 4) ?? "Unknown year"}
-                </p>
-              </div>
-              <Button
-                size="sm"
-                disabled={pending}
-                onClick={() => submit(movie.id)}
+          {results.map((movie) => {
+            const isSuggested = alreadySuggested.includes(movie.id);
+            return (
+              <div
+                key={movie.id}
+                className="flex items-center gap-3 rounded-lg border bg-card p-2"
               >
-                {suggestingId === movie.id ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  "Suggest"
-                )}
-              </Button>
-            </div>
-          ))}
+                <div className="relative aspect-2/3 w-10 shrink-0 overflow-hidden rounded border bg-muted">
+                  <Image
+                    src={tmdbImage(movie.poster_path, "w185")}
+                    alt={movie.title}
+                    width={40}
+                    height={60}
+                    className="object-cover"
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium">{movie.title}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {movie.release_date?.slice(0, 4) ?? "Unknown year"}
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  disabled={isSuggested || pending}
+                  onClick={() => submit(movie.id)}
+                >
+                  {suggestingId === movie.id ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : isSuggested ? (
+                    "Suggested"
+                  ) : (
+                    "Suggest"
+                  )}
+                </Button>
+              </div>
+            );
+          })}
         </div>
         {error ? (
           <p className="text-sm text-destructive">{error}</p>

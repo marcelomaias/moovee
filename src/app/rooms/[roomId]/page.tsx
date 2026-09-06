@@ -87,6 +87,11 @@ export default async function RoomPage({
 
   const isOwner = room.ownerId === session.user.id;
 
+  const alreadySuggested = [
+    ...pending.map((s) => s.tmdbId),
+    ...queueEntries.map((e) => e.tmdbId),
+  ];
+
   const members = isOwner
     ? await db
         .select({
@@ -204,7 +209,7 @@ export default async function RoomPage({
               : ` · approval: ${room.approvalMode}`}
           </p>
         </div>
-        <SuggestMovieDialog roomId={room.id} />
+        <SuggestMovieDialog roomId={room.id} alreadySuggested={alreadySuggested} />
       </div>
 
       <section className="mt-10">
