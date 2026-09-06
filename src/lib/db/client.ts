@@ -2,6 +2,7 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import { attachDatabasePool } from "@vercel/functions";
 import * as authSchema from "@/lib/auth/schema";
+import * as roomsSchema from "@/lib/rooms/schema";
 
 // Create the connection pool
 const pool = new Pool({
@@ -13,7 +14,7 @@ attachDatabasePool(pool);
 
 // Create Drizzle instance with the pool and schema
 // Combine all schema files here
-export const db = drizzle(pool, { schema: { ...authSchema } });
+export const db = drizzle(pool, { schema: { ...authSchema, ...roomsSchema } });
 
 // Database connection check function
 export async function checkDbConnection(): Promise<string> {

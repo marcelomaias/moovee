@@ -15,6 +15,13 @@
       "when": 1788421519751,
       "tag": "0001_even_scalphunter",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788659466221,
+      "tag": "0002_tidy_boom_boom",
+      "breakpoints": true
     }
   ]
 }
