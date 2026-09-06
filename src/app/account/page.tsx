@@ -1,13 +1,37 @@
 import { requireUser } from "@/lib/auth/permissions";
+import { and, desc, eq } from "drizzle-orm";
+import { db } from "@/lib/db/client";
+import { room, roomInvite } from "@/lib/rooms/schema";
 import { AvatarUpload } from "@/components/account/avatar-upload";
 import { ChangeEmailForm } from "@/components/account/change-email-form";
 import { ChangeNameForm } from "@/components/account/change-name-form";
 import { ChangePasswordForm } from "@/components/account/change-password-form";
 import { NavBar } from "@/components/navbar";
+import { RoomInvites } from "@/components/rooms/room-invites";
 
 export default async function AccountPage() {
   const session = await requireUser();
   const { user } = session;
+
+  const invites = await db
+    .select({
+      roomId: roomInvite.roomId,
+      roomName: room.name,
+      expiresAt: roomInvite.expiresAt,
+    })
+    .from(roomInvite)
+    .innerJoin(room, eq(roomInvite.roomId, room.id))
+    .where(
+      and(
+        eq(roomInvite.invitedUserId, user.id),
+        eq(roomInvite.status, "pending"),
+      ),
+    )
+    .orderBy(desc(roomInvite.createdAt));
+
+  const activeInvites = invites
+    .filter((i) => i.expiresAt.getTime() > Date.now())
+    .map(({ roomId, roomName }) => ({ roomId, roomName }));
 
   return (
     <main className="mx-auto max-w-4xl p-8">
@@ -19,6 +43,16 @@ export default async function AccountPage() {
       </div>
 
       <div className="mt-8 space-y-6">
+        <section className="rounded-lg border p-6">
+          <h2 className="text-xl font-semibold">Room Invites</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Accept or decline invitations to join rooms.
+          </p>
+          <div className="mt-4">
+            <RoomInvites invites={activeInvites} />
+          </div>
+        </section>
+
         <section className="rounded-lg border p-6">
           <div>
             <h2 className="text-xl font-semibold">Profile</h2>

@@ -2,11 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { and, eq } from "drizzle-orm";
+import { and, eq, like, ne, notInArray, or } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { requireUser } from "@/lib/auth/permissions";
+import { user } from "@/lib/auth/schema";
 import {
   room,
+  roomInvite,
   roomMember,
   queueEntry,
   suggestion,
@@ -21,6 +23,7 @@ import {
 import { getMovieDetails } from "@/lib/tmdb/client";
 
 const SUGGESTION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+const INVITE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 export async function createRoom(
   prevState: { error: string } | null,
@@ -230,6 +233,135 @@ export async function removeHistoryEntry(roomId: string, tmdbId: number) {
   await db
     .delete(watchHistory)
     .where(and(eq(watchHistory.roomId, roomId), eq(watchHistory.tmdbId, tmdbId)));
+
+  revalidatePath(`/rooms/${roomId}`);
+}
+
+export async function searchUsersForInvite(roomId: string, query: string) {
+  const { session } = await requireRoomOwner(roomId);
+  const q = query.trim();
+  if (q.length === 0) return [];
+
+  const memberIds = db
+    .select({ id: roomMember.userId })
+    .from(roomMember)
+    .where(eq(roomMember.roomId, roomId));
+  const pendingInviteeIds = db
+    .select({ id: roomInvite.invitedUserId })
+    .from(roomInvite)
+    .where(
+      and(eq(roomInvite.roomId, roomId), eq(roomInvite.status, "pending")),
+    );
+
+  return db
+    .select({ id: user.id, name: user.name, email: user.email })
+    .from(user)
+    .where(
+      and(
+        or(like(user.name, `%${q}%`), like(user.email, `%${q}%`)),
+        ne(user.id, session.user.id),
+        notInArray(user.id, memberIds),
+        notInArray(user.id, pendingInviteeIds),
+      ),
+    )
+    .orderBy(user.name)
+    .limit(10);
+}
+
+export async function inviteToRoom(roomId: string, userId: string) {
+  const { session } = await requireRoomOwner(roomId);
+
+  const [membership] = await db
+    .select({ id: roomMember.id })
+    .from(roomMember)
+    .where(and(eq(roomMember.roomId, roomId), eq(roomMember.userId, userId)))
+    .limit(1);
+  if (membership) return { error: "This user is already a member." };
+
+  await db
+    .insert(roomInvite)
+    .values({
+      id: crypto.randomUUID(),
+      roomId,
+      invitedUserId: userId,
+      invitedById: session.user.id,
+      status: "pending",
+      expiresAt: new Date(Date.now() + INVITE_TTL_MS),
+    })
+    .onConflictDoUpdate({
+      target: [roomInvite.roomId, roomInvite.invitedUserId],
+      set: {
+        status: "pending",
+        invitedById: session.user.id,
+        expiresAt: new Date(Date.now() + INVITE_TTL_MS),
+      },
+    });
+
+  revalidatePath(`/rooms/${roomId}`);
+}
+
+export async function acceptInvite(roomId: string) {
+  const session = await requireUser();
+
+  const [invite] = await db
+    .select()
+    .from(roomInvite)
+    .where(
+      and(
+        eq(roomInvite.roomId, roomId),
+        eq(roomInvite.invitedUserId, session.user.id),
+        eq(roomInvite.status, "pending"),
+      ),
+    )
+    .limit(1);
+  if (!invite) return { error: "No pending invitation found." };
+  if (invite.expiresAt.getTime() < Date.now()) {
+    return {
+      error: "This invitation has expired. Ask the owner to invite you again.",
+    };
+  }
+
+  await db.insert(roomMember).values({
+    id: crypto.randomUUID(),
+    roomId,
+    userId: session.user.id,
+    role: "member",
+  });
+  await db
+    .update(roomInvite)
+    .set({ status: "accepted" })
+    .where(eq(roomInvite.id, invite.id));
+
+  revalidatePath("/account");
+  revalidatePath(`/rooms/${roomId}`);
+}
+
+export async function declineInvite(roomId: string) {
+  const session = await requireUser();
+
+  await db
+    .update(roomInvite)
+    .set({ status: "declined" })
+    .where(
+      and(
+        eq(roomInvite.roomId, roomId),
+        eq(roomInvite.invitedUserId, session.user.id),
+        eq(roomInvite.status, "pending"),
+      ),
+    );
+
+  revalidatePath("/account");
+}
+
+export async function removeMember(roomId: string, userId: string) {
+  const { session } = await requireRoomOwner(roomId);
+  if (userId === session.user.id) {
+    return { error: "You cannot remove yourself from the room." };
+  }
+
+  await db
+    .delete(roomMember)
+    .where(and(eq(roomMember.roomId, roomId), eq(roomMember.userId, userId)));
 
   revalidatePath(`/rooms/${roomId}`);
 }

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { requireRoomMember } from "@/lib/rooms/auth";
 import { db } from "@/lib/db/client";
+import { user } from "@/lib/auth/schema";
 import {
   queueEntry,
   roomMember,
@@ -15,6 +16,8 @@ import { SuggestMovieDialog } from "@/components/rooms/suggest-movie-dialog";
 import { QueueList } from "@/components/rooms/queue-list";
 import { HistoryList } from "@/components/rooms/history-list";
 import { RoomTabs } from "@/components/rooms/room-tabs";
+import { InviteMembers } from "@/components/rooms/invite-members";
+import { MemberList } from "@/components/rooms/member-list";
 
 export default async function RoomPage({
   params,
@@ -83,6 +86,87 @@ export default async function RoomPage({
 
   const isOwner = room.ownerId === session.user.id;
 
+  const members = isOwner
+    ? await db
+        .select({
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: roomMember.role,
+        })
+        .from(roomMember)
+        .innerJoin(user, eq(roomMember.userId, user.id))
+        .where(eq(roomMember.roomId, roomId))
+        .orderBy(asc(roomMember.joinedAt))
+    : [];
+
+  const tabs = [
+    {
+      key: "suggestions",
+      label: `Suggestions (${suggestions.length})`,
+      content: (
+        <SuggestionList
+          roomId={room.id}
+          suggestions={suggestions}
+          memberCount={memberCount}
+          myVotes={votes.map((v) => v.suggestionId)}
+        />
+      ),
+    },
+    {
+      key: "queue",
+      label: `Queue (${queueEntries.length})`,
+      content: (
+        <QueueList
+          roomId={room.id}
+          entries={queueEntries.map((e) => ({
+            id: e.id,
+            title: e.title,
+            posterPath: e.posterPath,
+            releaseYear: e.releaseYear,
+            position: e.position,
+          }))}
+          isOwner={isOwner}
+        />
+      ),
+    },
+    {
+      key: "history",
+      label: `History (${history.length})`,
+      content: (
+        <HistoryList
+          roomId={room.id}
+          entries={history.map((h) => ({
+            id: h.id,
+            tmdbId: h.tmdbId,
+            title: h.title,
+            posterPath: h.posterPath,
+            releaseYear: h.releaseYear,
+            watchedAt: h.watchedAt,
+          }))}
+          isOwner={isOwner}
+        />
+      ),
+    },
+  ];
+
+  if (isOwner) {
+    tabs.push({
+      key: "members",
+      label: `Members (${members.length})`,
+      content: (
+        <div className="space-y-6">
+          <InviteMembers roomId={room.id} />
+          <MemberList
+            roomId={room.id}
+            members={members}
+            currentUserId={session.user.id}
+          />
+        </div>
+      ),
+    });
+  }
+
   return (
     <main className="mx-auto max-w-4xl p-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -107,57 +191,7 @@ export default async function RoomPage({
       </div>
 
       <section className="mt-10">
-        <RoomTabs
-          tabs={[
-            {
-              key: "suggestions",
-              label: `Suggestions (${suggestions.length})`,
-              content: (
-                <SuggestionList
-                  roomId={room.id}
-                  suggestions={suggestions}
-                  memberCount={memberCount}
-                  myVotes={votes.map((v) => v.suggestionId)}
-                />
-              ),
-            },
-            {
-              key: "queue",
-              label: `Queue (${queueEntries.length})`,
-              content: (
-                <QueueList
-                  roomId={room.id}
-                  entries={queueEntries.map((e) => ({
-                    id: e.id,
-                    title: e.title,
-                    posterPath: e.posterPath,
-                    releaseYear: e.releaseYear,
-                    position: e.position,
-                  }))}
-                  isOwner={isOwner}
-                />
-              ),
-            },
-            {
-              key: "history",
-              label: `History (${history.length})`,
-              content: (
-                <HistoryList
-                  roomId={room.id}
-                  entries={history.map((h) => ({
-                    id: h.id,
-                    tmdbId: h.tmdbId,
-                    title: h.title,
-                    posterPath: h.posterPath,
-                    releaseYear: h.releaseYear,
-                    watchedAt: h.watchedAt,
-                  }))}
-                  isOwner={isOwner}
-                />
-              ),
-            },
-          ]}
-        />
+        <RoomTabs tabs={tabs} />
       </section>
     </main>
   );
