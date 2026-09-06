@@ -1,6 +1,14 @@
 import { auth } from "@/lib/auth/server";
 import { db } from "@/lib/db/client";
 import { user } from "@/lib/auth/schema";
+import {
+  queueEntry,
+  room,
+  roomInvite,
+  roomMember,
+  suggestion,
+  watchHistory,
+} from "@/lib/rooms/schema";
 import { eq } from "drizzle-orm";
 
 /**
@@ -30,6 +38,27 @@ export const ADMIN_TEST_USER: TestUser = {
   password: "AdminPassw0rd!",
   role: "admin",
 };
+
+/** Fixed rooms users used by the Playwright rooms suite (global-setup seeds them). */
+export const ROOM_OWNER_TEST_USER: TestUser = {
+  name: "Room Owner",
+  email: "room.owner@test.local",
+  password: "TestPassw0rd!",
+  role: "user",
+};
+
+export const ROOM_MEMBER_TEST_USER: TestUser = {
+  name: "Room Member",
+  email: "room.member@test.local",
+  password: "TestPassw0rd!",
+  role: "user",
+};
+
+export const ROOM_FIXTURE_ROOMS = {
+  approval: "Room Wars",
+  invite: "Party Room",
+  settings: "Settings Room",
+} as const;
 
 /** A uniquely-identified user so parallel Vitest files never collide on email. */
 export function makeTestUser(prefix: string, role: TestUser["role"]): TestUser {
@@ -73,6 +102,72 @@ export async function seedTestUsers(): Promise<{
     regular: await createUser(REGULAR_TEST_USER),
     admin: await createUser(ADMIN_TEST_USER),
   };
+}
+
+/**
+ * Seeds the rooms used by the Playwright rooms suite: three rooms owned by
+ * `ROOM_OWNER_TEST_USER` (approval flow, invite flow, settings flow), a pending
+ * suggestion in the first, and a pending invite to `ROOM_MEMBER_TEST_USER` in
+ * the second. Idempotent per run: existing fixture rooms are wiped of
+ * suggestions/queue/history/invites and reseeded so re-runs start clean.
+ */
+export async function seedRoomsFixture() {
+  const owner = await createUser(ROOM_OWNER_TEST_USER);
+  const member = await createUser(ROOM_MEMBER_TEST_USER);
+
+  for (const name of Object.values(ROOM_FIXTURE_ROOMS)) {
+    const [existing] = await db.select().from(room).where(eq(room.name, name)).limit(1);
+    if (!existing) {
+      const id = `room-${crypto.randomUUID()}`;
+      await db.insert(room).values({ id, name, ownerId: owner.id });
+      await db.insert(roomMember).values({
+        id: crypto.randomUUID(),
+        roomId: id,
+        userId: owner.id,
+        role: "owner",
+      });
+    } else {
+      await db
+        .update(room)
+        .set({ approvalMode: "majority", approvalThreshold: null })
+        .where(eq(room.id, existing.id));
+      await db.delete(suggestion).where(eq(suggestion.roomId, existing.id));
+      await db.delete(queueEntry).where(eq(queueEntry.roomId, existing.id));
+      await db.delete(watchHistory).where(eq(watchHistory.roomId, existing.id));
+      await db.delete(roomInvite).where(eq(roomInvite.roomId, existing.id));
+    }
+  }
+
+  const [approvalRoom] = await db
+    .select({ id: room.id })
+    .from(room)
+    .where(eq(room.name, ROOM_FIXTURE_ROOMS.approval))
+    .limit(1);
+  const [inviteRoom] = await db
+    .select({ id: room.id })
+    .from(room)
+    .where(eq(room.name, ROOM_FIXTURE_ROOMS.invite))
+    .limit(1);
+
+  await db.insert(suggestion).values({
+    id: crypto.randomUUID(),
+    roomId: approvalRoom!.id,
+    suggestedById: owner.id,
+    tmdbId: 999001,
+    title: "The Grand Cinema",
+    status: "pending",
+    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+  });
+  await db.insert(roomInvite).values({
+    id: crypto.randomUUID(),
+    roomId: inviteRoom!.id,
+    invitedUserId: member.id,
+    invitedById: owner.id,
+    status: "pending",
+    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+  });
+
+  return { owner, member };
 }
 
 /**

@@ -74,15 +74,18 @@ describe("invites", () => {
     const invitee = await createUser(makeTestUser("search-target", "user"));
     const roomId = await createRoomWith(owner);
 
-    const found = await searchUsersForInvite(roomId, "search-target");
+    const targetTerm = invitee.email.split("@")[0];
+    const ownerTerm = owner.email.split("@")[0];
+
+    const found = await searchUsersForInvite(roomId, targetTerm);
     expect(found).toHaveLength(1);
     expect(found[0].id).toBe(invitee.id);
 
-    const own = await searchUsersForInvite(roomId, "search-owner");
+    const own = await searchUsersForInvite(roomId, ownerTerm);
     expect(own).toHaveLength(0);
 
     await inviteToRoom(roomId, invitee.id);
-    const after = await searchUsersForInvite(roomId, "search-target");
+    const after = await searchUsersForInvite(roomId, targetTerm);
     expect(after).toHaveLength(0);
 
     await db.delete(room).where(eq(room.id, roomId));

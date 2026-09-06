@@ -18,6 +18,7 @@ import { HistoryList } from "@/components/rooms/history-list";
 import { RoomTabs } from "@/components/rooms/room-tabs";
 import { InviteMembers } from "@/components/rooms/invite-members";
 import { MemberList } from "@/components/rooms/member-list";
+import { RoomSettings } from "@/components/rooms/room-settings";
 
 export default async function RoomPage({
   params,
@@ -162,6 +163,19 @@ export default async function RoomPage({
             members={members}
             currentUserId={session.user.id}
           />
+          <section className="rounded-lg border p-4">
+            <h2 className="text-sm font-semibold">Approval Rules</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Control how suggestions are approved before they enter the queue.
+            </p>
+            <div className="mt-4">
+              <RoomSettings
+                roomId={room.id}
+                mode={room.approvalMode as "majority" | "unanimous" | "percentage"}
+                threshold={room.approvalThreshold}
+              />
+            </div>
+          </section>
         </div>
       ),
     });
@@ -185,6 +199,9 @@ export default async function RoomPage({
           ) : null}
           <p className="mt-1 text-xs text-muted-foreground">
             {memberCount} member{memberCount === 1 ? "" : "s"}
+            {room.approvalMode === "percentage" && room.approvalThreshold
+              ? ` · approval: ${room.approvalThreshold}% of members`
+              : ` · approval: ${room.approvalMode}`}
           </p>
         </div>
         <SuggestMovieDialog roomId={room.id} />

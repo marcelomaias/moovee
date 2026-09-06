@@ -1,8 +1,10 @@
-import { seedTestUsers } from "./seed";
+import { seedRoomsFixture, seedTestUsers } from "./seed";
 
 async function main() {
   const seeded = await seedTestUsers();
   console.log(`Seeded test users: ${seeded.regular.email}, ${seeded.admin.email}`);
+  await seedRoomsFixture();
+  console.log("Seeded rooms fixtures");
 }
 
 main().catch((err) => {

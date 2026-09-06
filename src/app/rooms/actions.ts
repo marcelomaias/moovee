@@ -366,6 +366,36 @@ export async function removeMember(roomId: string, userId: string) {
   revalidatePath(`/rooms/${roomId}`);
 }
 
+const APPROVAL_MODES = ["majority", "unanimous", "percentage"] as const;
+
+export async function updateApprovalSettings(
+  roomId: string,
+  formData: FormData,
+) {
+  await requireRoomOwner(roomId);
+
+  const mode = formData.get("mode");
+  if (typeof mode !== "string" || !APPROVAL_MODES.includes(mode as never)) {
+    return { error: "Invalid approval mode." };
+  }
+
+  let threshold: number | null = null;
+  if (mode === "percentage") {
+    const t = Number(formData.get("threshold"));
+    if (!Number.isInteger(t) || t < 1 || t > 100) {
+      return { error: "Percentage threshold must be an integer between 1 and 100." };
+    }
+    threshold = t;
+  }
+
+  await db
+    .update(room)
+    .set({ approvalMode: mode, approvalThreshold: threshold })
+    .where(eq(room.id, roomId));
+
+  revalidatePath(`/rooms/${roomId}`);
+}
+
 export async function approveSuggestion(roomId: string, suggestionId: string) {
   const { session, room: roomRef } = await requireRoomMember(roomId);
   await finalizeExpired(roomId);
