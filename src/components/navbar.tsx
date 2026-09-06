@@ -61,7 +61,11 @@ export function NavBar() {
               Loading...
             </Button>
           ) : user ? (
-            <DropdownMenu>
+            <>
+              <Button variant="outline" asChild>
+                <Link href="/rooms">Rooms</Link>
+              </Button>
+              <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
@@ -111,6 +115,7 @@ export function NavBar() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            </>
           ) : (
             <Button variant="default" asChild>
               <Link href="/sign-in">Sign In</Link>

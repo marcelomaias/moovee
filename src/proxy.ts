@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionCookie } from "better-auth/cookies";
 
-const protectedRoutes = ["/account", "/admin"];
+const protectedRoutes = ["/account", "/admin", "/rooms"];
 const authRoutes = ["/sign-in", "/sign-up"];
 
 export function proxy(request: NextRequest) {
@@ -32,6 +32,7 @@ export const config = {
   matcher: [
     "/account/:path*",
     "/admin/:path*",
+    "/rooms/:path*",
     "/sign-in",
     "/sign-up",
   ],
