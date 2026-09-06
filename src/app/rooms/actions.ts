@@ -110,15 +110,9 @@ export async function suggestMovie(roomId: string, tmdbId: number) {
     .from(queueEntry)
     .where(and(eq(queueEntry.roomId, roomId), eq(queueEntry.tmdbId, tmdbId)))
     .limit(1);
-  const [inHistory] = await db
-    .select({ id: watchHistory.id })
-    .from(watchHistory)
-    .where(and(eq(watchHistory.roomId, roomId), eq(watchHistory.tmdbId, tmdbId)))
-    .limit(1);
 
   if (dupPending) return { error: "This movie is already suggested." };
   if (inQueue) return { error: "This movie is already in the queue." };
-  if (inHistory) return { error: "This movie is already in history." };
 
   const details = await getMovieDetails(tmdbId);
   const suggestionId = crypto.randomUUID();
@@ -144,6 +138,98 @@ export async function suggestMovie(roomId: string, tmdbId: number) {
     });
     await resolveSuggestionIfReady(tx, roomRef, suggestionId);
   });
+
+  revalidatePath(`/rooms/${roomId}`);
+}
+
+export async function markWatched(roomId: string, queueEntryId: string) {
+  const { session } = await requireRoomMember(roomId);
+
+  await db.transaction(async (tx) => {
+    await tx
+      .select({ id: room.id })
+      .from(room)
+      .where(eq(room.id, roomId))
+      .for("no key update");
+
+    const [entry] = await tx
+      .select()
+      .from(queueEntry)
+      .where(
+        and(eq(queueEntry.roomId, roomId), eq(queueEntry.id, queueEntryId)),
+      )
+      .limit(1);
+    if (!entry) return;
+
+    await tx
+      .insert(watchHistory)
+      .values({
+        id: crypto.randomUUID(),
+        roomId,
+        tmdbId: entry.tmdbId,
+        title: entry.title,
+        posterPath: entry.posterPath,
+        releaseYear: entry.releaseYear,
+        watchedById: session.user.id,
+        sourceQueueEntryId: entry.id,
+      })
+      .onConflictDoNothing();
+    await tx.delete(queueEntry).where(eq(queueEntry.id, entry.id));
+  });
+
+  revalidatePath(`/rooms/${roomId}`);
+}
+
+export async function reorderQueue(roomId: string, order: string[]) {
+  await requireRoomOwner(roomId);
+
+  await db.transaction(async (tx) => {
+    await tx
+      .select({ id: room.id })
+      .from(room)
+      .where(eq(room.id, roomId))
+      .for("no key update");
+
+    const rows = await tx
+      .select()
+      .from(queueEntry)
+      .where(eq(queueEntry.roomId, roomId));
+    const ids = new Set(rows.map((r) => r.id));
+    if (
+      order.length !== rows.length ||
+      order.some((id) => !ids.has(id)) ||
+      new Set(order).size !== order.length
+    ) {
+      return;
+    }
+
+    const byId = new Map(rows.map((r) => [r.id, r]));
+    await tx.delete(queueEntry).where(eq(queueEntry.roomId, roomId));
+    for (const [i, id] of order.entries()) {
+      const row = byId.get(id)!;
+      await tx.insert(queueEntry).values({ ...row, position: i + 1 });
+    }
+  });
+
+  revalidatePath(`/rooms/${roomId}`);
+}
+
+export async function removeQueueEntry(roomId: string, queueEntryId: string) {
+  await requireRoomOwner(roomId);
+
+  await db
+    .delete(queueEntry)
+    .where(and(eq(queueEntry.roomId, roomId), eq(queueEntry.id, queueEntryId)));
+
+  revalidatePath(`/rooms/${roomId}`);
+}
+
+export async function removeHistoryEntry(roomId: string, tmdbId: number) {
+  await requireRoomOwner(roomId);
+
+  await db
+    .delete(watchHistory)
+    .where(and(eq(watchHistory.roomId, roomId), eq(watchHistory.tmdbId, tmdbId)));
 
   revalidatePath(`/rooms/${roomId}`);
 }

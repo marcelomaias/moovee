@@ -1,15 +1,20 @@
 import Link from "next/link";
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { requireRoomMember } from "@/lib/rooms/auth";
 import { db } from "@/lib/db/client";
 import {
+  queueEntry,
   roomMember,
   suggestion,
   suggestionVote,
+  watchHistory,
 } from "@/lib/rooms/schema";
 import { finalizeExpired } from "@/lib/rooms/approval";
 import { SuggestionList } from "@/components/rooms/suggestion-list";
 import { SuggestMovieDialog } from "@/components/rooms/suggest-movie-dialog";
+import { QueueList } from "@/components/rooms/queue-list";
+import { HistoryList } from "@/components/rooms/history-list";
+import { RoomTabs } from "@/components/rooms/room-tabs";
 
 export default async function RoomPage({
   params,
@@ -64,6 +69,20 @@ export default async function RoomPage({
     approvals: countMap.get(s.id) ?? 0,
   }));
 
+  const queueEntries = await db
+    .select()
+    .from(queueEntry)
+    .where(eq(queueEntry.roomId, roomId))
+    .orderBy(asc(queueEntry.position));
+
+  const history = await db
+    .select()
+    .from(watchHistory)
+    .where(eq(watchHistory.roomId, roomId))
+    .orderBy(desc(watchHistory.watchedAt));
+
+  const isOwner = room.ownerId === session.user.id;
+
   return (
     <main className="mx-auto max-w-4xl p-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -88,15 +107,57 @@ export default async function RoomPage({
       </div>
 
       <section className="mt-10">
-        <h2 className="text-xl font-semibold">Suggestions</h2>
-        <div className="mt-4">
-          <SuggestionList
-            roomId={room.id}
-            suggestions={suggestions}
-            memberCount={memberCount}
-            myVotes={votes.map((v) => v.suggestionId)}
-          />
-        </div>
+        <RoomTabs
+          tabs={[
+            {
+              key: "suggestions",
+              label: `Suggestions (${suggestions.length})`,
+              content: (
+                <SuggestionList
+                  roomId={room.id}
+                  suggestions={suggestions}
+                  memberCount={memberCount}
+                  myVotes={votes.map((v) => v.suggestionId)}
+                />
+              ),
+            },
+            {
+              key: "queue",
+              label: `Queue (${queueEntries.length})`,
+              content: (
+                <QueueList
+                  roomId={room.id}
+                  entries={queueEntries.map((e) => ({
+                    id: e.id,
+                    title: e.title,
+                    posterPath: e.posterPath,
+                    releaseYear: e.releaseYear,
+                    position: e.position,
+                  }))}
+                  isOwner={isOwner}
+                />
+              ),
+            },
+            {
+              key: "history",
+              label: `History (${history.length})`,
+              content: (
+                <HistoryList
+                  roomId={room.id}
+                  entries={history.map((h) => ({
+                    id: h.id,
+                    tmdbId: h.tmdbId,
+                    title: h.title,
+                    posterPath: h.posterPath,
+                    releaseYear: h.releaseYear,
+                    watchedAt: h.watchedAt,
+                  }))}
+                  isOwner={isOwner}
+                />
+              ),
+            },
+          ]}
+        />
       </section>
     </main>
   );
