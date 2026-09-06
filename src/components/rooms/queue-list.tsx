@@ -34,6 +34,7 @@ function RowBody({
   index,
   isOwner,
   isLocked,
+  isWatchedPending,
   handleRef,
   onRemove,
   onWatched,
@@ -42,6 +43,7 @@ function RowBody({
   index: number;
   isOwner: boolean;
   isLocked: boolean;
+  isWatchedPending: boolean;
   handleRef?: Ref<HTMLButtonElement>;
   onRemove?: (id: string) => void;
   onWatched: (id: string) => void;
@@ -90,15 +92,20 @@ function RowBody({
       ) : null}
       <Button
         size="sm"
-        disabled={isLocked}
+        disabled={isWatchedPending}
         onClick={() => onWatched(entry.id)}
       >
-        {isLocked ? (
-          <Loader2 className="size-4 animate-spin" />
+        {isWatchedPending ? (
+          <>
+            <Loader2 className="size-4 animate-spin" />
+            Marking as Watched…
+          </>
         ) : (
-          <Check className="size-4" />
+          <>
+            <Check className="size-4" />
+            Mark as Watched
+          </>
         )}
-        Watched
       </Button>
     </>
   );
@@ -108,12 +115,14 @@ function SortableQueueRow({
   entry,
   index,
   isLocked,
+  isWatchedPending,
   onRemove,
   onWatched,
 }: {
   entry: QueueEntryData;
   index: number;
   isLocked: boolean;
+  isWatchedPending: boolean;
   onRemove: (id: string) => void;
   onWatched: (id: string) => void;
 }) {
@@ -135,6 +144,7 @@ function SortableQueueRow({
         index={index}
         isOwner
         isLocked={isLocked}
+        isWatchedPending={isWatchedPending}
         handleRef={handleRef}
         onRemove={onRemove}
         onWatched={onWatched}
@@ -147,11 +157,13 @@ function PlainQueueRow({
   entry,
   index,
   isLocked,
+  isWatchedPending,
   onWatched,
 }: {
   entry: QueueEntryData;
   index: number;
   isLocked: boolean;
+  isWatchedPending: boolean;
   onWatched: (id: string) => void;
 }) {
   return (
@@ -161,6 +173,7 @@ function PlainQueueRow({
         index={index}
         isOwner={false}
         isLocked={isLocked}
+        isWatchedPending={isWatchedPending}
         onWatched={onWatched}
       />
     </li>
@@ -170,6 +183,9 @@ function PlainQueueRow({
 export function QueueList({ roomId, entries, isOwner }: Props) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
+  const [pendingWatchedId, setPendingWatchedId] = useState<string | null>(
+    null,
+  );
   const [isPending, startTransition] = useTransition();
   const [isSavingOrder, startReorderTransition] = useTransition();
   const [optimisticEntries, setOptimisticEntries] = useOptimistic(entries);
@@ -180,6 +196,19 @@ export function QueueList({ roomId, entries, isOwner }: Props) {
     startTransition(async () => {
       await fn();
       router.refresh();
+    });
+  };
+
+  const watch = (entryId: string) => {
+    if (pendingWatchedId !== null) return;
+    setPendingWatchedId(entryId);
+    startTransition(async () => {
+      try {
+        await markWatched(roomId, entryId);
+        router.refresh();
+      } finally {
+        setPendingWatchedId(null);
+      }
     });
   };
 
@@ -240,8 +269,9 @@ export function QueueList({ roomId, entries, isOwner }: Props) {
                 entry={entry}
                 index={i}
                 isLocked={isLocked}
+                isWatchedPending={pendingWatchedId === entry.id}
                 onRemove={(id) => run(() => removeQueueEntry(roomId, id))}
-                onWatched={(id) => run(() => markWatched(roomId, id))}
+                onWatched={watch}
               />
             ))}
           </ol>
@@ -254,7 +284,8 @@ export function QueueList({ roomId, entries, isOwner }: Props) {
               entry={entry}
               index={i}
               isLocked={isLocked}
-              onWatched={(id) => run(() => markWatched(roomId, id))}
+              isWatchedPending={pendingWatchedId === entry.id}
+              onWatched={watch}
             />
           ))}
         </ol>
