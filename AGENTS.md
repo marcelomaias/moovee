@@ -70,6 +70,15 @@ Read these files to understand the existing implementation:
 - Use `cn()` from `@/lib/utils` for class merging (it wraps `clsx` + `tailwind-merge`).
 - **Tailwind v4** — no `tailwind.config.ts`. Theme tokens are CSS custom properties in `src/app/globals.css`. Dark mode uses the `.dark` class.
 
+#### Room UI: loading feedback
+
+Single-item actions must show pending/loading feedback only on the affected item. Whole-list operations must use list-level feedback. Never show loading indicators on unrelated items because another item is being processed.
+
+- approve suggestion → spinner/disabled only on that suggestion
+- mark as watched → pending state only on that movie
+- remove/exclude item → pending state only on that item
+- reorder queue → one queue-level saving indicator
+
 ### Server vs. Client Components
 
 - Pages are **server components by default**. Only add `"use client"` when the component needs hooks, event handlers, or browser APIs.
