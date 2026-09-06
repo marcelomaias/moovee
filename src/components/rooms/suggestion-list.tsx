@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Check, Loader2 } from "lucide-react";
@@ -31,13 +31,16 @@ export function SuggestionList({
   myVotes,
 }: Props) {
   const router = useRouter();
-  const [pending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
+  const [actingId, setActingId] = useState<string | null>(null);
   const voted = new Set(myVotes);
 
   const approve = (suggestionId: string) => {
+    setActingId(suggestionId);
     startTransition(async () => {
       await approveSuggestion(roomId, suggestionId);
       router.refresh();
+      setActingId(null);
     });
   };
 
@@ -53,6 +56,7 @@ export function SuggestionList({
     <ul className="space-y-3">
       {suggestions.map((s) => {
         const alreadyVoted = voted.has(s.id);
+        const isActing = actingId === s.id;
         return (
           <li
             key={s.id}
@@ -79,14 +83,14 @@ export function SuggestionList({
             </span>
             <Button
               size="sm"
-              disabled={alreadyVoted || pending}
+              disabled={alreadyVoted || isActing}
               onClick={() => approve(s.id)}
             >
               {alreadyVoted ? (
                 <>
                   <Check className="size-4" /> Approved
                 </>
-              ) : pending ? (
+              ) : isActing ? (
                 <Loader2 className="size-4 animate-spin" />
               ) : (
                 "Approve"
