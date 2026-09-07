@@ -109,7 +109,8 @@ export async function seedTestUsers(): Promise<{
  * `ROOM_OWNER_TEST_USER` (approval flow, invite flow, settings flow), a pending
  * suggestion in the first, and a pending invite to `ROOM_MEMBER_TEST_USER` in
  * the second. Idempotent per run: existing fixture rooms are wiped of
- * suggestions/queue/history/invites and reseeded so re-runs start clean.
+ * suggestions/queue/history/invites/members and reseeded so re-runs start
+ * clean (a previously accepted invite must not leave a stale membership).
  */
 export async function seedRoomsFixture() {
   const owner = await createUser(ROOM_OWNER_TEST_USER);
@@ -135,6 +136,13 @@ export async function seedRoomsFixture() {
       await db.delete(queueEntry).where(eq(queueEntry.roomId, existing.id));
       await db.delete(watchHistory).where(eq(watchHistory.roomId, existing.id));
       await db.delete(roomInvite).where(eq(roomInvite.roomId, existing.id));
+      await db.delete(roomMember).where(eq(roomMember.roomId, existing.id));
+      await db.insert(roomMember).values({
+        id: crypto.randomUUID(),
+        roomId: existing.id,
+        userId: owner.id,
+        role: "owner",
+      });
     }
   }
 

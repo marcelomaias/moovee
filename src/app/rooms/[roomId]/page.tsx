@@ -11,8 +11,10 @@ import {
   watchHistory,
 } from "@/lib/rooms/schema";
 import { finalizeExpired } from "@/lib/rooms/approval";
+import { getMovie } from "@/lib/tmdb/client";
 import { SuggestionList } from "@/components/rooms/suggestion-list";
 import { SuggestMovieDialog } from "@/components/rooms/suggest-movie-dialog";
+import { QueueHero } from "@/components/rooms/queue-hero";
 import { QueueList } from "@/components/rooms/queue-list";
 import { HistoryList } from "@/components/rooms/history-list";
 import { RoomTabs } from "@/components/rooms/room-tabs";
@@ -78,6 +80,17 @@ export default async function RoomPage({
     .from(queueEntry)
     .where(eq(queueEntry.roomId, roomId))
     .orderBy(asc(queueEntry.position));
+
+  const queueMovies = (
+    await Promise.allSettled(queueEntries.map((e) => getMovie(e.tmdbId)))
+  ).map((result, i) => ({
+    tmdbId: queueEntries[i].tmdbId,
+    title: queueEntries[i].title,
+    releaseYear: queueEntries[i].releaseYear,
+    backdropPath:
+      result.status === "fulfilled" ? result.value.backdrop_path : null,
+    posterPath: queueEntries[i].posterPath,
+  }));
 
   const history = await db
     .select()
@@ -176,7 +189,9 @@ export default async function RoomPage({
             <div className="mt-6">
               <RoomSettings
                 roomId={room.id}
-                mode={room.approvalMode as "majority" | "unanimous" | "percentage"}
+                mode={
+                  room.approvalMode as "majority" | "unanimous" | "percentage"
+                }
                 threshold={room.approvalThreshold}
               />
             </div>
@@ -187,8 +202,8 @@ export default async function RoomPage({
   }
 
   return (
-    <main className="mx-auto max-w-5xl p-8">
-      <div className="flex flex-wrap items-end justify-between gap-4">
+    <main>
+      <div className="mx-auto max-w-5xl p-4 flex flex-wrap items-end justify-between gap-4">
         <div>
           <Link
             href="/rooms"
@@ -200,19 +215,32 @@ export default async function RoomPage({
             {room.name}
           </h1>
           {room.description ? (
-            <p className="mt-2 text-lg text-muted-foreground">{room.description}</p>
+            <p className="mt-2 text-lg text-muted-foreground">
+              {room.description}
+            </p>
           ) : null}
-          <p className="mt-2 text-sm text-muted-foreground">
+        </div>
+        <div className="text-right">
+          <p className="mb-3 text-sm text-muted-foreground">
             {memberCount} member{memberCount === 1 ? "" : "s"}
             {room.approvalMode === "percentage" && room.approvalThreshold
               ? ` · approval: ${room.approvalThreshold}% of members`
               : ` · approval: ${room.approvalMode}`}
           </p>
+          <SuggestMovieDialog
+            roomId={room.id}
+            alreadySuggested={alreadySuggested}
+          />
         </div>
-        <SuggestMovieDialog roomId={room.id} alreadySuggested={alreadySuggested} />
       </div>
 
-      <section className="mt-12">
+      {queueMovies.length > 0 ? (
+        <section className="mt-4">
+          <QueueHero movies={queueMovies} />
+        </section>
+      ) : null}
+
+      <section className="mx-auto max-w-5xl mt-12">
         <RoomTabs tabs={tabs} />
       </section>
     </main>

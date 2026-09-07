@@ -35,6 +35,11 @@ export async function getMovieDetails(id: number): Promise<MovieDetail> {
   return tmdbFetch(`/movie/${id}?append_to_response=credits`, 21_600);
 }
 
+// Lightweight single-movie fetch (no credits) for backdrops/posters.
+export async function getMovie(id: number): Promise<Movie> {
+  return tmdbFetch(`/movie/${id}`, 21_600);
+}
+
 export async function searchMovies(
   query: string,
   page = 1,
@@ -49,7 +54,7 @@ export async function searchMovies(
 // when no path exists so cards never render a broken image.
 export function tmdbImage(
   path: string | null,
-  size: "w185" | "w342" | "w500" | "w780" | "original" = "w500",
+  size: "w185" | "w342" | "w500" | "w780" | "w1280" | "original" = "w500",
 ): string {
   if (!path)
     return "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='450' viewBox='0 0 300 450'%3E%3Crect width='300' height='450' fill='%23a1a1aa'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='14' fill='%23f4f4f5'%3ENo Image%3C/text%3E%3C/svg%3E";

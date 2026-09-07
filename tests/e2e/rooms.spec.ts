@@ -38,7 +38,10 @@ test("approving a suggestion moves it through the queue to history", async ({ pa
   });
 
   await page.getByRole("tab", { name: /Queue/ }).click();
-  await expect(page.getByText("The Grand Cinema")).toBeVisible({ timeout: 30_000 });
+  // Scoped to the queue list: the hero also surfaces the movie's title.
+  await expect(page.getByRole("list").getByText("The Grand Cinema")).toBeVisible({
+    timeout: 30_000,
+  });
 
   await page.getByRole("button", { name: "Watched" }).click();
   await expect(
