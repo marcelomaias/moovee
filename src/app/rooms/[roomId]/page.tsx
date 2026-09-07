@@ -214,39 +214,41 @@ export default async function RoomPage({
 
   return (
     <main>
-      <div className="mx-auto max-w-5xl p-4 flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <Link
-            href="/rooms"
-            className="text-base text-muted-foreground hover:text-foreground"
-          >
-            ← Back to rooms
-          </Link>
-          <h1 className="mt-3 text-4xl font-bold tracking-tight">
-            {room.name}
-          </h1>
-          {room.description ? (
-            <p className="mt-2 text-lg text-muted-foreground">
-              {room.description}
+      <div className="bg-card">
+        <div className="mx-auto max-w-6xl p-4 flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <Link
+              href="/rooms"
+              className="text-base text-muted-foreground hover:text-foreground"
+            >
+              ← Back to rooms
+            </Link>
+            <h1 className="mt-1 text-4xl font-bold tracking-tight">
+              {room.name}
+            </h1>
+            {room.description ? (
+              <p className="mt-2 text-lg text-muted-foreground">
+                {room.description}
+              </p>
+            ) : null}
+          </div>
+          <div className="text-right">
+            <p className="mb-3 text-sm text-muted-foreground">
+              {memberCount} member{memberCount === 1 ? "" : "s"}
+              {room.approvalMode === "percentage" && room.approvalThreshold
+                ? ` · approval: ${room.approvalThreshold}% of members`
+                : ` · approval: ${room.approvalMode}`}
             </p>
-          ) : null}
-        </div>
-        <div className="text-right">
-          <p className="mb-3 text-sm text-muted-foreground">
-            {memberCount} member{memberCount === 1 ? "" : "s"}
-            {room.approvalMode === "percentage" && room.approvalThreshold
-              ? ` · approval: ${room.approvalThreshold}% of members`
-              : ` · approval: ${room.approvalMode}`}
-          </p>
-          <SuggestMovieDialog
-            roomId={room.id}
-            alreadySuggested={alreadySuggested}
-          />
+            <SuggestMovieDialog
+              roomId={room.id}
+              alreadySuggested={alreadySuggested}
+            />
+          </div>
         </div>
       </div>
 
       {queueMovies.length > 0 ? (
-        <section className="mt-4">
+        <section>
           <QueueHero movies={queueMovies} />
         </section>
       ) : null}

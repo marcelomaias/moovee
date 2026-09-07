@@ -33,10 +33,9 @@ export function QueueHero({ movies }: Props) {
   const [detailId, setDetailId] = useState<number | null>(null);
   const [prevDisabled, setPrevDisabled] = useState(true);
   const [nextDisabled, setNextDisabled] = useState(true);
-  const [emblaMainRef, emblaMainApi] = useEmblaCarousel(
-    { watchDrag: false },
-    [Fade()],
-  );
+  const [emblaMainRef, emblaMainApi] = useEmblaCarousel({ watchDrag: false }, [
+    Fade(),
+  ]);
   const [emblaThumbsRef, emblaThumbsApi] = useEmblaCarousel({
     containScroll: "keepSnaps",
     dragFree: true,
@@ -125,7 +124,7 @@ export function QueueHero({ movies }: Props) {
         </div>
 
         {hasThumbs ? (
-          <div className="relative z-20 -mt-16">
+          <div className="mx-auto w-full max-w-6xl relative z-20 -mt-16">
             <div className="flex items-center gap-3">
               <Button
                 variant="ghost"
@@ -136,7 +135,10 @@ export function QueueHero({ movies }: Props) {
               >
                 <ChevronLeft className="size-5" />
               </Button>
-              <div ref={emblaThumbsRef} className="min-w-0 overflow-hidden py-2">
+              <div
+                ref={emblaThumbsRef}
+                className="min-w-0 overflow-hidden px-4 py-3"
+              >
                 <div className="flex gap-3">
                   {movies.map((m, i) => (
                     <button
@@ -146,7 +148,7 @@ export function QueueHero({ movies }: Props) {
                       aria-label={`Show ${m.title}`}
                       aria-current={i === selectedIndex}
                       className={cn(
-                        "relative aspect-2/3 w-16 shrink-0 overflow-hidden rounded-lg border bg-muted transition-all",
+                        "relative aspect-2/3 w-32 shrink-0 overflow-hidden rounded-lg border bg-muted transition-all",
                         i === selectedIndex
                           ? "scale-110 border-foreground opacity-100"
                           : "opacity-50 hover:opacity-90",
@@ -156,7 +158,7 @@ export function QueueHero({ movies }: Props) {
                         src={tmdbImage(m.posterPath, "w185")}
                         alt={m.title}
                         fill
-                        sizes="64px"
+                        sizes="128px"
                         className="object-cover"
                       />
                     </button>
