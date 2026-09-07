@@ -34,6 +34,9 @@ export function SuggestionList({
   const [, startTransition] = useTransition();
   const [actingId, setActingId] = useState<string | null>(null);
   const voted = new Set(myVotes);
+  const sorted = [...suggestions].sort(
+    (a, b) => Number(voted.has(a.id)) - Number(voted.has(b.id)),
+  );
 
   const approve = (suggestionId: string) => {
     setActingId(suggestionId);
@@ -46,52 +49,51 @@ export function SuggestionList({
 
   if (suggestions.length === 0) {
     return (
-      <p className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
+      <p className="rounded-xl border border-dashed p-12 text-center text-base text-muted-foreground">
         No pending suggestions. Suggest a movie to get started.
       </p>
     );
   }
 
   return (
-    <ul className="space-y-3">
-      {suggestions.map((s) => {
+    <ul className="space-y-4">
+      {sorted.map((s) => {
         const alreadyVoted = voted.has(s.id);
         const isActing = actingId === s.id;
         return (
           <li
             key={s.id}
-            className="flex items-center gap-4 rounded-lg border bg-card p-3"
+            className="flex items-center gap-4 rounded-xl border bg-card p-4"
           >
-            <div className="relative aspect-2/3 w-12 shrink-0 overflow-hidden rounded-md border bg-muted">
+            <div className="relative aspect-2/3 w-16 shrink-0 overflow-hidden rounded-lg border bg-muted">
               <Image
                 src={tmdbImage(s.posterPath, "w185")}
                 alt={s.title}
-                width={48}
-                height={72}
+                width={64}
+                height={96}
                 className="object-cover"
               />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate font-medium">{s.title}</p>
-              <p className="text-xs text-muted-foreground">
+              <p className="truncate text-lg font-medium">{s.title}</p>
+              <p className="text-sm text-muted-foreground">
                 {s.releaseYear ?? "Unknown year"} · suggested{" "}
                 {s.suggestedAt.toLocaleDateString()}
               </p>
             </div>
-            <span className="rounded-full border px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+            <span className="rounded-full border px-3 py-1 text-sm font-medium text-muted-foreground">
               {s.approvals}/{memberCount} approvals
             </span>
             <Button
-              size="sm"
               disabled={alreadyVoted || isActing}
               onClick={() => approve(s.id)}
             >
               {alreadyVoted ? (
                 <>
-                  <Check className="size-4" /> Approved
+                  <Check className="size-5" /> Approved
                 </>
               ) : isActing ? (
-                <Loader2 className="size-4 animate-spin" />
+                <Loader2 className="size-5 animate-spin" />
               ) : (
                 "Approve"
               )}

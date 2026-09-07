@@ -41,8 +41,8 @@ export function RoomSettings({ roomId, mode, threshold }: Props) {
   };
 
   return (
-    <div className="space-y-3">
-      <div className="grid grid-cols-2 gap-3">
+    <div className="space-y-5">
+      <div className="grid grid-cols-2 gap-4">
         <div>
           <Label htmlFor="approval-mode">Approval mode</Label>
           <select
@@ -51,7 +51,7 @@ export function RoomSettings({ roomId, mode, threshold }: Props) {
             onChange={(e) =>
               setSelectedMode(e.target.value as ApprovalMode)
             }
-            className="mt-1 block w-full rounded-md border bg-background px-3 py-2 text-sm"
+            className="mt-2 block w-full rounded-lg border bg-background px-4 py-3 text-base"
           >
             <option value="majority">Majority</option>
             <option value="unanimous">Unanimous</option>
@@ -68,24 +68,25 @@ export function RoomSettings({ roomId, mode, threshold }: Props) {
               max={100}
               value={thresholdValue}
               onChange={(e) => setThresholdValue(e.target.value)}
+              className="mt-2 h-11 text-base"
             />
           </div>
         ) : null}
       </div>
       {selectedMode === "percentage" ? (
-        <p className="text-xs text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           A suggestion is approved once the share of approvals reaches this
           percentage of members. The suggester&apos;s own vote counts.
         </p>
       ) : (
-        <p className="text-xs text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           {selectedMode === "majority"
             ? "A suggestion is approved once more than half of members approve."
             : "A suggestion is approved only when every member approves."}
         </p>
       )}
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
-      <Button size="sm" disabled={saving} onClick={save}>
+      {error ? <p className="text-base text-destructive">{error}</p> : null}
+      <Button disabled={saving} onClick={save}>
         {saving ? "Saving…" : "Save"}
       </Button>
     </div>

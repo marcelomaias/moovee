@@ -24,44 +24,42 @@ export function RoomInvites({ invites }: { invites: InviteData[] }) {
 
   if (invites.length === 0) {
     return (
-      <p className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
+      <p className="rounded-xl border border-dashed p-10 text-center text-base text-muted-foreground">
         No pending room invitations.
       </p>
     );
   }
 
   return (
-    <ul className="space-y-2">
+    <ul className="space-y-3">
       {invites.map((invite) => (
         <li
           key={invite.roomId}
-          className="flex items-center gap-3 rounded-lg border bg-card p-4"
+          className="flex items-center gap-4 rounded-xl border bg-card p-4"
         >
           <div className="min-w-0 flex-1">
-            <p className="font-medium">{invite.roomName}</p>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-lg font-medium">{invite.roomName}</p>
+            <p className="text-sm text-muted-foreground">
               You've been invited to this room.
             </p>
           </div>
           <Button
-            size="sm"
             disabled={pending}
             onClick={() => act(acceptInvite, invite.roomId)}
           >
             {pending ? (
-              <Loader2 className="size-4 animate-spin" />
+              <Loader2 className="size-5 animate-spin" />
             ) : (
-              <Check className="size-4" />
+              <Check className="size-5" />
             )}
             Accept
           </Button>
           <Button
-            size="sm"
             variant="outline"
             disabled={pending}
             onClick={() => act(declineInvite, invite.roomId)}
           >
-            <X className="size-4" />
+            <X className="size-5" />
             Decline
           </Button>
         </li>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Plus } from "lucide-react";
 import { desc, eq } from "drizzle-orm";
 import { requireUser } from "@/lib/auth/permissions";
 import { db } from "@/lib/db/client";
@@ -17,25 +18,27 @@ export default async function RoomsPage() {
     .orderBy(desc(room.createdAt));
 
   return (
-    <main className="mx-auto max-w-4xl p-8">
-      <div className="flex items-center justify-between">
+    <main className="mx-auto max-w-5xl p-8">
+      <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Rooms</h1>
-          <p className="mt-2 text-muted-foreground">
+          <h1 className="text-4xl font-bold tracking-tight">Rooms</h1>
+          <p className="mt-2 text-lg text-muted-foreground">
             Collaborative movie rooms you belong to.
           </p>
         </div>
-        <Button asChild>
-          <Link href="/rooms/new">Create Room</Link>
+        <Button asChild size="lg">
+          <Link href="/rooms/new">
+            <Plus className="size-5" /> Create Room
+          </Link>
         </Button>
       </div>
 
       {memberships.length === 0 ? (
-        <p className="mt-12 text-center text-muted-foreground">
+        <p className="mt-16 text-center text-base text-muted-foreground">
           You are not in any rooms yet. Create one to get started.
         </p>
       ) : (
-        <div className="mt-8 grid gap-4 md:grid-cols-2">
+        <div className="mt-10 grid gap-6 md:grid-cols-2">
           {memberships.map(({ room: r }) => (
             <RoomCard key={r.id} room={r} />
           ))}

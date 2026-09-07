@@ -161,19 +161,19 @@ export default async function RoomPage({
       key: "members",
       label: `Members (${members.length})`,
       content: (
-        <div className="space-y-6">
+        <div className="space-y-8">
           <InviteMembers roomId={room.id} />
           <MemberList
             roomId={room.id}
             members={members}
             currentUserId={session.user.id}
           />
-          <section className="rounded-lg border p-4">
-            <h2 className="text-sm font-semibold">Approval Rules</h2>
-            <p className="mt-1 text-xs text-muted-foreground">
+          <section className="rounded-xl border p-6">
+            <h2 className="text-lg font-semibold">Approval Rules</h2>
+            <p className="mt-1.5 text-sm text-muted-foreground">
               Control how suggestions are approved before they enter the queue.
             </p>
-            <div className="mt-4">
+            <div className="mt-6">
               <RoomSettings
                 roomId={room.id}
                 mode={room.approvalMode as "majority" | "unanimous" | "percentage"}
@@ -187,22 +187,22 @@ export default async function RoomPage({
   }
 
   return (
-    <main className="mx-auto max-w-4xl p-8">
+    <main className="mx-auto max-w-5xl p-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <Link
             href="/rooms"
-            className="text-sm text-muted-foreground hover:text-foreground"
+            className="text-base text-muted-foreground hover:text-foreground"
           >
             ← Back to rooms
           </Link>
-          <h1 className="mt-2 text-3xl font-bold tracking-tight">
+          <h1 className="mt-3 text-4xl font-bold tracking-tight">
             {room.name}
           </h1>
           {room.description ? (
-            <p className="mt-1 text-muted-foreground">{room.description}</p>
+            <p className="mt-2 text-lg text-muted-foreground">{room.description}</p>
           ) : null}
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="mt-2 text-sm text-muted-foreground">
             {memberCount} member{memberCount === 1 ? "" : "s"}
             {room.approvalMode === "percentage" && room.approvalThreshold
               ? ` · approval: ${room.approvalThreshold}% of members`
@@ -212,7 +212,7 @@ export default async function RoomPage({
         <SuggestMovieDialog roomId={room.id} alreadySuggested={alreadySuggested} />
       </div>
 
-      <section className="mt-10">
+      <section className="mt-12">
         <RoomTabs tabs={tabs} />
       </section>
     </main>

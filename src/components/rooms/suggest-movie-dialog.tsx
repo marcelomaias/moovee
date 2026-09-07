@@ -54,8 +54,8 @@ export function SuggestMovieDialog({
       }}
     >
       <DialogTrigger asChild>
-        <Button>
-          <Plus className="size-4" /> Suggest a Movie
+        <Button size="lg">
+          <Plus className="size-5" /> Suggest a Movie
         </Button>
       </DialogTrigger>
       <DialogContent>
@@ -63,21 +63,21 @@ export function SuggestMovieDialog({
           <DialogTitle>Suggest a Movie</DialogTitle>
         </DialogHeader>
         <div className="relative">
-          <Search className="pointer-events-none absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
+          <Search className="pointer-events-none absolute left-3.5 top-3 size-5 text-muted-foreground" />
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search movies…"
-            className="pl-9"
+            className="h-11 pl-11 text-base"
           />
         </div>
 
-        <div className="max-h-80 space-y-2 overflow-y-auto">
+        <div className="max-h-96 space-y-3 overflow-y-auto">
           {isSearching && (
-            <Loader2 className="mx-auto my-8 size-5 animate-spin text-muted-foreground" />
+            <Loader2 className="mx-auto my-10 size-6 animate-spin text-muted-foreground" />
           )}
           {!isSearching && query.trim() !== "" && results.length === 0 && (
-            <p className="py-8 text-center text-sm text-muted-foreground">
+            <p className="py-10 text-center text-base text-muted-foreground">
               No movies found.
             </p>
           )}
@@ -86,30 +86,29 @@ export function SuggestMovieDialog({
             return (
               <div
                 key={movie.id}
-                className="flex items-center gap-3 rounded-lg border bg-card p-2"
+                className="flex items-center gap-4 rounded-xl border bg-card p-3"
               >
-                <div className="relative aspect-2/3 w-10 shrink-0 overflow-hidden rounded border bg-muted">
+                <div className="relative aspect-2/3 w-14 shrink-0 overflow-hidden rounded-md border bg-muted">
                   <Image
                     src={tmdbImage(movie.poster_path, "w185")}
                     alt={movie.title}
-                    width={40}
-                    height={60}
+                    width={56}
+                    height={84}
                     className="object-cover"
                   />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{movie.title}</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="truncate text-base font-medium">{movie.title}</p>
+                  <p className="text-sm text-muted-foreground">
                     {movie.release_date?.slice(0, 4) ?? "Unknown year"}
                   </p>
                 </div>
                 <Button
-                  size="sm"
                   disabled={isSuggested || pending}
                   onClick={() => submit(movie.id)}
                 >
                   {suggestingId === movie.id ? (
-                    <Loader2 className="size-4 animate-spin" />
+                    <Loader2 className="size-5 animate-spin" />
                   ) : isSuggested ? (
                     "Suggested"
                   ) : (
@@ -121,7 +120,7 @@ export function SuggestMovieDialog({
           })}
         </div>
         {error ? (
-          <p className="text-sm text-destructive">{error}</p>
+          <p className="text-base text-destructive">{error}</p>
         ) : null}
       </DialogContent>
     </Dialog>

@@ -9,14 +9,14 @@ export function RoomCard({ room }: { room: Room }) {
   return (
     <Link
       href={`/rooms/${room.id}`}
-      className="group flex flex-col gap-1 rounded-xl border bg-card p-5 transition-all hover:shadow-sm"
+      className="group flex flex-col gap-2 rounded-xl border bg-card p-6 transition-all hover:shadow-sm"
     >
       <div className="flex items-center gap-2">
-        <DoorOpen className="size-4 text-muted-foreground" />
-        <h2 className="font-semibold">{room.name}</h2>
+        <DoorOpen className="size-5 text-muted-foreground" />
+        <h2 className="text-lg font-semibold">{room.name}</h2>
       </div>
       {room.description ? (
-        <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+        <p className="mt-1.5 line-clamp-2 text-base text-muted-foreground">
           {room.description}
         </p>
       ) : null}

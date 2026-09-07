@@ -50,7 +50,7 @@ function RowBody({
 }) {
   return (
     <>
-      <span className="w-6 text-center text-sm font-semibold text-muted-foreground">
+      <span className="w-8 text-center text-base font-semibold text-muted-foreground">
         {index + 1}
       </span>
       {isOwner ? (
@@ -59,50 +59,49 @@ function RowBody({
           type="button"
           aria-label={`Reorder ${entry.title}`}
           disabled={isLocked}
-          className="cursor-grab rounded-md border p-1.5 text-muted-foreground transition-colors hover:bg-muted active:cursor-grabbing disabled:cursor-default disabled:opacity-50"
+          className="cursor-grab rounded-lg border p-2 text-muted-foreground transition-colors hover:bg-muted active:cursor-grabbing disabled:cursor-default disabled:opacity-50"
         >
-          <GripVertical className="size-4" />
+          <GripVertical className="size-5" />
         </button>
       ) : null}
-      <div className="relative aspect-2/3 w-12 shrink-0 overflow-hidden rounded-md border bg-muted">
+      <div className="relative aspect-2/3 w-16 shrink-0 overflow-hidden rounded-lg border bg-muted">
         <Image
           src={tmdbImage(entry.posterPath, "w185")}
           alt={entry.title}
-          width={48}
-          height={72}
+          width={64}
+          height={96}
           className="object-cover"
         />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="truncate font-medium">{entry.title}</p>
-        <p className="text-xs text-muted-foreground">
+        <p className="truncate text-lg font-medium">{entry.title}</p>
+        <p className="text-sm text-muted-foreground">
           {entry.releaseYear ?? "Unknown year"}
         </p>
       </div>
       {isOwner && onRemove ? (
         <Button
-          size="icon"
+          size="icon-lg"
           variant="ghost"
           disabled={isLocked}
           onClick={() => onRemove(entry.id)}
           aria-label={`Remove ${entry.title} from queue`}
         >
-          <X className="size-4" />
+          <X className="size-5" />
         </Button>
       ) : null}
       <Button
-        size="sm"
         disabled={isWatchedPending}
         onClick={() => onWatched(entry.id)}
       >
         {isWatchedPending ? (
           <>
-            <Loader2 className="size-4 animate-spin" />
+            <Loader2 className="size-5 animate-spin" />
             Marking as Watched…
           </>
         ) : (
           <>
-            <Check className="size-4" />
+            <Check className="size-5" />
             Mark as Watched
           </>
         )}
@@ -135,7 +134,7 @@ function SortableQueueRow({
   return (
     <li
       ref={ref}
-      className={`flex items-center gap-4 rounded-lg border bg-card p-3 transition-opacity ${
+      className={`flex items-center gap-4 rounded-xl border bg-card p-4 transition-opacity ${
         isDragSource ? "opacity-60" : ""
       }`}
     >
@@ -167,7 +166,7 @@ function PlainQueueRow({
   onWatched: (id: string) => void;
 }) {
   return (
-    <li className="flex items-center gap-4 rounded-lg border bg-card p-3">
+    <li className="flex items-center gap-4 rounded-xl border bg-card p-4">
       <RowBody
         entry={entry}
         index={index}
@@ -227,26 +226,26 @@ export function QueueList({ roomId, entries, isOwner }: Props) {
 
   if (optimisticEntries.length === 0) {
     return (
-      <p className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
+      <p className="rounded-xl border border-dashed p-12 text-center text-base text-muted-foreground">
         Nothing in the queue yet. Approved suggestions appear here.
       </p>
     );
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {isSavingOrder ? (
         <p
           role="status"
-          className="flex items-center gap-2 text-xs text-muted-foreground"
+          className="flex items-center gap-2 text-sm text-muted-foreground"
         >
-          <Loader2 className="size-3 animate-spin" /> Saving order…
+          <Loader2 className="size-4 animate-spin" /> Saving order…
         </p>
       ) : null}
       {error ? (
         <p
           role="alert"
-          className="rounded-lg border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+          className="rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-base text-destructive"
         >
           {error}
         </p>
@@ -262,7 +261,7 @@ export function QueueList({ roomId, entries, isOwner }: Props) {
             persistOrder(next);
           }}
         >
-          <ol className="space-y-3">
+          <ol className="space-y-4">
             {optimisticEntries.map((entry, i) => (
               <SortableQueueRow
                 key={entry.id}
@@ -277,7 +276,7 @@ export function QueueList({ roomId, entries, isOwner }: Props) {
           </ol>
         </DragDropProvider>
       ) : (
-        <ol className="space-y-3">
+        <ol className="space-y-4">
           {optimisticEntries.map((entry, i) => (
             <PlainQueueRow
               key={entry.id}

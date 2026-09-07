@@ -64,39 +64,38 @@ export function InviteMembers({ roomId }: { roomId: string }) {
   return (
     <div>
       <div className="relative">
-        <Search className="pointer-events-none absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
+        <Search className="pointer-events-none absolute left-3.5 top-3 size-5 text-muted-foreground" />
         <Input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search users by name or email…"
-          className="pl-9"
+          className="h-11 pl-11 text-base"
         />
       </div>
-      <div className="mt-3 space-y-2">
-        {error ? <p className="text-sm text-destructive">{error}</p> : null}
-        {searching && <p className="text-sm text-muted-foreground">Searching…</p>}
+      <div className="mt-4 space-y-3">
+        {error ? <p className="text-base text-destructive">{error}</p> : null}
+        {searching && <p className="text-base text-muted-foreground">Searching…</p>}
         {!searching && query.trim() !== "" && results.length === 0 && (
-          <p className="text-sm text-muted-foreground">No users found.</p>
+          <p className="text-base text-muted-foreground">No users found.</p>
         )}
         {results.map((u) => (
           <div
             key={u.id}
-            className="flex items-center gap-3 rounded-lg border bg-card p-3"
+            className="flex items-center gap-4 rounded-xl border bg-card p-4"
           >
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium">{u.name}</p>
-              <p className="truncate text-xs text-muted-foreground">{u.email}</p>
+              <p className="truncate text-base font-medium">{u.name}</p>
+              <p className="truncate text-sm text-muted-foreground">{u.email}</p>
             </div>
             <Button
-              size="sm"
               disabled={invitingId === u.id}
               onClick={() => invite(u.id)}
             >
               {invitingId === u.id ? (
-                <Loader2 className="size-4 animate-spin" />
+                <Loader2 className="size-5 animate-spin" />
               ) : (
                 <>
-                  <UserPlus className="size-4" /> Invite
+                  <UserPlus className="size-5" /> Invite
                 </>
               )}
             </Button>

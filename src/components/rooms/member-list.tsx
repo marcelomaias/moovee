@@ -32,36 +32,35 @@ export function MemberList({ roomId, members, currentUserId }: Props) {
   };
 
   return (
-    <ul className="divide-y rounded-lg border bg-card">
+    <ul className="divide-y rounded-xl border bg-card">
       {members.map((m) => (
-        <li key={m.id} className="flex items-center gap-3 p-3">
+        <li key={m.id} className="flex items-center gap-4 p-4">
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium">
+            <p className="truncate text-base font-medium">
               {m.name}
               {m.role === "owner" && (
-                <span className="ml-2 rounded-full border px-2 py-0.5 text-xs text-muted-foreground">
+                <span className="ml-2 rounded-full border px-2.5 py-1 text-sm text-muted-foreground">
                   Owner
                 </span>
               )}
             </p>
-            <p className="truncate text-xs text-muted-foreground">{m.email}</p>
+            <p className="truncate text-sm text-muted-foreground">{m.email}</p>
           </div>
           {m.id !== currentUserId ? (
             <Button
-              size="sm"
               variant="ghost"
               disabled={pending === m.id}
               onClick={() => remove(m.id)}
             >
               {pending === m.id ? (
-                <Loader2 className="size-4 animate-spin" />
+                <Loader2 className="size-5 animate-spin" />
               ) : (
-                <UserX className="size-4" />
+                <UserX className="size-5" />
               )}
               Remove
             </Button>
           ) : (
-            <span className="text-xs text-muted-foreground">You</span>
+            <span className="text-sm text-muted-foreground">You</span>
           )}
         </li>
       ))}

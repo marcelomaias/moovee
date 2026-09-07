@@ -15,7 +15,7 @@ export function RoomTabs({ tabs }: { tabs: Tab[] }) {
 
   return (
     <div>
-      <div className="flex gap-1 border-b" role="tablist">
+      <div className="flex gap-2 border-b" role="tablist">
         {tabs.map((t) => (
           <button
             key={t.key}
@@ -23,7 +23,7 @@ export function RoomTabs({ tabs }: { tabs: Tab[] }) {
             aria-selected={t.key === active}
             onClick={() => setActive(t.key)}
             className={cn(
-              "px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground",
+              "px-5 py-3 text-base font-medium text-muted-foreground transition-colors hover:text-foreground",
               t.key === active &&
                 "border-b-2 border-foreground text-foreground",
             )}
@@ -32,7 +32,7 @@ export function RoomTabs({ tabs }: { tabs: Tab[] }) {
           </button>
         ))}
       </div>
-      <div className="mt-4">{activeTab.content}</div>
+      <div className="mt-6">{activeTab.content}</div>
     </div>
   );
 }

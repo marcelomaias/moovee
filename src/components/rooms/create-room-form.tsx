@@ -7,13 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 const textareaClass =
-  "flex min-h-20 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50";
+  "flex min-h-24 w-full rounded-lg border border-input bg-transparent px-4 py-3 text-base shadow-xs transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50";
 
 export function CreateRoomForm() {
   const [state, formAction, pending] = useActionState(createRoom, null);
 
   return (
-    <form action={formAction} className="space-y-4">
+    <form action={formAction} className="space-y-6">
       <div className="space-y-2">
         <Label htmlFor="name">Name</Label>
         <Input
@@ -21,6 +21,7 @@ export function CreateRoomForm() {
           name="name"
           required
           placeholder="e.g. Friday Movie Night"
+          className="h-11 text-base"
         />
       </div>
       <div className="space-y-2">
@@ -34,9 +35,9 @@ export function CreateRoomForm() {
         />
       </div>
       {state?.error ? (
-        <p className="text-sm text-destructive">{state.error}</p>
+        <p className="text-base text-destructive">{state.error}</p>
       ) : null}
-      <Button type="submit" disabled={pending}>
+      <Button type="submit" size="lg" disabled={pending}>
         {pending ? "Creating..." : "Create Room"}
       </Button>
     </form>
