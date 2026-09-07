@@ -6,16 +6,22 @@ import { ChevronLeft, ChevronRight, Info } from "lucide-react";
 import useEmblaCarousel from "embla-carousel-react";
 import Fade from "embla-carousel-fade";
 import { tmdbImage } from "@/lib/tmdb/client";
+import type { Genre } from "@/lib/tmdb/types";
 import { Button } from "@/components/ui/button";
 import { MovieModal } from "@/components/movies/movie-modal";
+import { HeroContent } from "@/components/movies/hero";
 import { cn } from "@/lib/utils";
 
 export interface QueueMovie {
   tmdbId: number;
   title: string;
-  releaseYear: string | null;
+  release_date: string;
   backdropPath: string | null;
   posterPath: string | null;
+  tagline: string;
+  vote_average: number;
+  runtime: number | null;
+  genres: Genre[];
 }
 
 interface Props {
@@ -77,8 +83,8 @@ export function QueueHero({ movies }: Props) {
   return (
     <section>
       <div className="relative">
-        <div className="relative h-[50vh] min-h-[340px] overflow-hidden rounded-2xl bg-muted sm:h-[60vh]">
-          <div ref={emblaMainRef} className="h-full overflow-hidden">
+        <div className="relative h-[50vh] min-h-[320px] w-full overflow-hidden sm:h-[60vh]">
+          <div ref={emblaMainRef} className="absolute inset-0 overflow-hidden">
             <div className="flex h-full">
               {movies.map((m, i) => (
                 <div
@@ -87,11 +93,11 @@ export function QueueHero({ movies }: Props) {
                 >
                   {m.backdropPath ? (
                     <Image
-                      src={tmdbImage(m.backdropPath, "w1280")}
+                      src={tmdbImage(m.backdropPath, "original")}
                       alt={m.title}
                       fill
                       priority={i === 0}
-                      sizes="(max-width: 1024px) 100vw, 1024px"
+                      sizes="100vw"
                       className="object-cover"
                     />
                   ) : null}
@@ -100,19 +106,13 @@ export function QueueHero({ movies }: Props) {
             </div>
           </div>
 
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background via-background/25 to-transparent" />
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-background/70 via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-black/50" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-background/20 to-transparent" />
 
-          <div className="absolute inset-0 z-10 flex items-end gap-6 p-6 pb-28 sm:items-center sm:p-10">
-            <div className="max-w-xl">
-              <h2 className="text-3xl font-bold uppercase leading-tight tracking-tight text-foreground sm:text-5xl">
-                {movie.title}
-              </h2>
-              {movie.releaseYear && (
-                <p className="mt-2 text-sm font-semibold text-muted-foreground sm:text-base">
-                  {movie.releaseYear}
-                </p>
-              )}
+          <div className="relative mx-auto flex h-full w-full max-w-6xl items-end px-4 pb-28 sm:items-center sm:pb-0">
+            <div className="max-w-2xl">
+              <HeroContent movie={movie} />
               <Button
                 size="lg"
                 className="mt-4"

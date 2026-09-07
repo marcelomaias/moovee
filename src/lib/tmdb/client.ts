@@ -35,8 +35,11 @@ export async function getMovieDetails(id: number): Promise<MovieDetail> {
   return tmdbFetch(`/movie/${id}?append_to_response=credits`, 21_600);
 }
 
-// Lightweight single-movie fetch (no credits) for backdrops/posters.
-export async function getMovie(id: number): Promise<Movie> {
+// Lightweight single-movie fetch (no credits). The `/movie/{id}` endpoint
+// still returns genres, runtime, tagline, and rating.
+export async function getMovie(
+  id: number,
+): Promise<Omit<MovieDetail, "credits">> {
   return tmdbFetch(`/movie/${id}`, 21_600);
 }
 

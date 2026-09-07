@@ -37,6 +37,12 @@ test("approving a suggestion moves it through the queue to history", async ({ pa
     timeout: 30_000,
   });
 
+  // The hero must paint its metadata above the backdrop — text present in the
+  // DOM alone passed before even when clipped below the hero's overflow box.
+  await expect(
+    page.getByRole("heading", { level: 2, name: "The Grand Cinema" }),
+  ).toBeInViewport();
+
   await page.getByRole("tab", { name: /Queue/ }).click();
   // Scoped to the queue list: the hero also surfaces the movie's title.
   await expect(page.getByRole("list").getByText("The Grand Cinema")).toBeVisible({

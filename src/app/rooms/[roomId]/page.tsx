@@ -14,7 +14,7 @@ import { finalizeExpired } from "@/lib/rooms/approval";
 import { getMovie } from "@/lib/tmdb/client";
 import { SuggestionList } from "@/components/rooms/suggestion-list";
 import { SuggestMovieDialog } from "@/components/rooms/suggest-movie-dialog";
-import { QueueHero } from "@/components/rooms/queue-hero";
+import { QueueHero, type QueueMovie } from "@/components/rooms/queue-hero";
 import { QueueList } from "@/components/rooms/queue-list";
 import { HistoryList } from "@/components/rooms/history-list";
 import { RoomTabs } from "@/components/rooms/room-tabs";
@@ -81,16 +81,27 @@ export default async function RoomPage({
     .where(eq(queueEntry.roomId, roomId))
     .orderBy(asc(queueEntry.position));
 
-  const queueMovies = (
+  const queueMovies: QueueMovie[] = (
     await Promise.allSettled(queueEntries.map((e) => getMovie(e.tmdbId)))
-  ).map((result, i) => ({
-    tmdbId: queueEntries[i].tmdbId,
-    title: queueEntries[i].title,
-    releaseYear: queueEntries[i].releaseYear,
-    backdropPath:
-      result.status === "fulfilled" ? result.value.backdrop_path : null,
-    posterPath: queueEntries[i].posterPath,
-  }));
+  ).map((result, i) => {
+    const e = queueEntries[i];
+    return {
+      tmdbId: e.tmdbId,
+      title: e.title,
+      release_date:
+        result.status === "fulfilled"
+          ? result.value.release_date || e.releaseYear || ""
+          : e.releaseYear || "",
+      backdropPath:
+        result.status === "fulfilled" ? result.value.backdrop_path : null,
+      posterPath: e.posterPath,
+      tagline: result.status === "fulfilled" ? result.value.tagline : "",
+      vote_average:
+        result.status === "fulfilled" ? result.value.vote_average : 0,
+      runtime: result.status === "fulfilled" ? result.value.runtime : null,
+      genres: result.status === "fulfilled" ? result.value.genres : [],
+    };
+  });
 
   const history = await db
     .select()
